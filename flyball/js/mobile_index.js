@@ -16,8 +16,13 @@ class BackgroundScene extends Phaser.Scene
 
     preload ()
     {
-        this.load.image('tiles', 'assets/tilemaps/tiles/muddy-ground.png');
+        this.load.image('tiles', 'assets/tilemaps/tiles/fly-ball-grass-16.png');
         this.load.bitmapFont('nokia16', 'assets/fonts/bitmap/nokia16.png', 'assets/fonts/bitmap/nokia16.xml');
+
+        this.load.image('ball','assets/sprites/orb-red.png');
+        this.load.image('block','assets/sprites/block-wall.png');
+        this.load.image('wall','assets/sprites/red-pass-wall.png');
+        this.load.image('icon', 'assets/ui/score-icon.png');
     }
 
     create ()
@@ -44,9 +49,10 @@ class BackgroundScene extends Phaser.Scene
         var tileset = this.map.addTilesetImage('tiles');
         var layer = this.map.createDynamicLayer(0, tileset, 0, 0);
 
-        this.text = this.add.bitmapText(0, 0, 'nokia16').setScrollFactor(0);
+        this.text = this.add.bitmapText(20, 10, 'nokia16').setScrollFactor(0);
         
-        
+        this.add.image(0, 10, 'icon').setOrigin(0, 0).setScale(1.5).setScrollFactor(0);;
+
         this.scene.launch('GameScene');
 
         this.gameScene = this.scene.get('GameScene');
@@ -93,11 +99,24 @@ class GameScene extends Phaser.Scene
     GAME_WIDTH = 640;
     GAME_HEIGHT = 960;
 
+    ball;
     backgroundScene;
     parent;
     sizer;
     sx = 0;
-    
+    cursors;
+
+    blocks;
+    walls;
+
+    last_wall;
+
+    gameOver = false;
+    score = 0;
+    scoreText;
+
+    timedEvent;
+
     constructor ()
     {
         super('GameScene');
@@ -127,6 +146,44 @@ class GameScene extends Phaser.Scene
         //  -----------------------------------
         //  -----------------------------------
 
+        //  Input Events
+        this.cursors = this.input.keyboard.createCursorKeys();
+
+
+        this.input.mouse.disableContextMenu();
+
+
+        this.ball = this.physics.add.sprite(width/2, height - 10, 'ball');
+        this.ball.setBounce(0);
+        this.ball.setCollideWorldBounds(true);
+        
+        this.blocks = this.add.group();
+
+        this.walls = this.physics.add.group({
+            defaultKey: 'wall',
+            maxSize: 10,
+            createCallBack: function (wall){
+                wall.setName('wall' + this.getLength());
+                wall.body.setAllowGravity(false);
+
+                console.log('Created', wall.name);
+            },
+            removeCallBack: function(wall){
+                console.log('Removed', wall.name);
+            }
+        });
+
+        var randomX = Phaser.Math.Between(25, this.sizer.width - 25);
+
+        //var wall = this.walls.create(randomX, 16, 'wall');
+
+        this.physics.add.overlap(this.ball, this.walls, this.throughWall, null, this);
+        this.physics.add.collider(this.ball, this.blocks, this.hitBlock, null, this);
+        
+        this.scoreText = (Array(3).join(0) + this.score).slice(-3);
+        this.backgroundScene.text.setText(this.scoreText);
+
+        this.timedEvent = this.time.addEvent({ delay: 1000, callback: this.onEvent, callbackScope: this, loop: true });
     }
     
     //  ------------------------
@@ -181,12 +238,47 @@ class GameScene extends Phaser.Scene
 
     update (time, delta)
     {
+        if (this.gameOver){
+            return;
+        }
+
+        Phaser.Actions.IncY(this.walls.getChildren(), 1);
+
+        var that = this;
+        this.walls.children.iterate(function (wall) {
+            if (wall.y > 600) {
+                that.walls.killAndHide(wall);
+            }
+        });
+
         //  Any speed as long as 16 evenly divides by it
         this.sx -= 1;
+        
+        var p = this.input.activePointer;
 
-        this.backgroundScene.distance += this.sx;
+        var deltaX = 0;
 
-        this.backgroundScene.text.setText("Distance: " + this.backgroundScene.distance + '');
+        if (p.isDown)
+        {
+            deltaX = p.x - this.ball.x;
+        }
+
+        if (deltaX < 0 || this.cursors.left.isDown)
+        {
+            this.ball.setVelocityX(-160);
+            this.ball.angle -= 10;
+            //player.anims.play('left', true);
+        }
+        else if (deltaX > 0 || this.cursors.right.isDown)
+        {
+            this.ball.setVelocityX(160);
+            this.ball.angle += 10;
+
+            //player.anims.play('right', true);
+        }
+        else{
+            this.ball.setVelocityX(0);
+        }
 
         if (this.sx === -16)
         {
@@ -217,6 +309,43 @@ class GameScene extends Phaser.Scene
         //this.cameras.main.scrollX = 16;
         this.backgroundScene.updateScrollY(this.sx + 16);
     }
+
+    // timer event
+    onEvent (){
+
+        var randomX = Phaser.Math.Between(25, this.sizer.width - 25);
+
+        var wall = this.walls.get(randomX, 16);
+
+        if (!wall){
+            return;
+        }
+
+        wall.setActive(true).setVisible(true);
+        wall.body.setAllowGravity(false);
+    }
+
+    hitBlock (ball, block){
+        
+        this.physics.pause();
+
+        this.gameOver = true;
+    }
+
+    throughWall(ball, wall){
+        
+        if (this.last_wall && this.last_wall === wall){
+            return;
+        }
+        //wall.disableBody(true, true);
+
+        this.score += 10;
+
+        this.scoreText = (Array(3).join(0) + this.score).slice(-3);
+        this.backgroundScene.text.setText(this.scoreText);
+        
+        this.last_wall = wall;
+    }
 }
 
 const config = {
@@ -234,6 +363,13 @@ const config = {
         max: {
             width: 1400,
             height: 1200
+        }
+    },
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 300 },
+            debug: false
         }
     },
     scene: [ BackgroundScene, GameScene ]
