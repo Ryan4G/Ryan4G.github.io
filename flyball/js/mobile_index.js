@@ -12,13 +12,6 @@ class StartScene extends Phaser.Scene
         super('StartScene');
     }
 
-    preload(){
-        this.load.image('logo', 'assets/ui/Banner.png');
-        this.load.image('button', 'assets/ui/Banner-2.png');
-        this.load.image('startarea', 'assets/ui/Banner-3.png');
-        this.load.bitmapFont('nokia', 'assets/fonts/bitmap/nokia16black.png', 'assets/fonts/bitmap/nokia16black.xml');
-    }
-
     create(){
 
         const width = this.scale.gameSize.width;
@@ -67,6 +60,7 @@ class StartScene extends Phaser.Scene
 //  This Scene has no aspect ratio lock, it will scale to fit the browser window, but will zoom to match the Game
 class BackgroundScene extends Phaser.Scene
 {
+    SPEED = 2;
     SCORE_NUM = 6;
 
     sx = 0;
@@ -82,6 +76,7 @@ class BackgroundScene extends Phaser.Scene
     scoreText;
 
     bgMusic;
+    gameOver = false;
 
     constructor ()
     {
@@ -90,9 +85,13 @@ class BackgroundScene extends Phaser.Scene
 
     preload ()
     {
+        // Start Scene Metirals
+        this.load.image('logo', 'assets/ui/Banner.png');
+        this.load.image('button', 'assets/ui/Banner-2.png');
+        this.load.image('startarea', 'assets/ui/Banner-3.png');
+ 
+        // Background Scene
         this.load.image('tiles', 'assets/tilemaps/tiles/fly-ball-grass-16.png');
-
-        // this.load.image('ball','assets/sprites/orb-red.png');
 
         this.load.spritesheet(
             'ball',
@@ -104,10 +103,16 @@ class BackgroundScene extends Phaser.Scene
         this.load.image('wall','assets/sprites/red-pass-wall.png');
         this.load.image('icon', 'assets/ui/score-icon.png');
         
-        this.load.audio('bg', 'assets/sounds/bg_loop.mp3');
-        this.load.audio('ball_through', 'assets/sounds/ball_through.mp3');
-        
+        this.load.image('pause', 'assets/ui/pause-icon.png');
+
         this.load.bitmapFont('nokia16', 'assets/fonts/bitmap/nokia16.png', 'assets/fonts/bitmap/nokia16.xml');
+        this.load.bitmapFont('nokia', 'assets/fonts/bitmap/nokia16black.png', 'assets/fonts/bitmap/nokia16black.xml');
+    
+        // Music
+        this.load.audio('bg', 'assets/sounds/bg_loop.mp3');
+        this.load.audio('block_crash', 'assets/sounds/block_crash.mp3');
+        this.load.audio('knock_wall', 'assets/sounds/knock_wall.mp3');
+        
     }
 
     create ()
@@ -142,19 +147,19 @@ class BackgroundScene extends Phaser.Scene
         
         this.scene.launch('StartScene');
 
-        // this.scene.launch('GameScene');
-
-        this.gameScene = this.scene.get('GameScene');
-
         this.bgMusic = this.sound.add('bg', { loop: true });
 
-        this.bgMusic.play({volume: 0.2});
+        this.bgMusic.play({volume: 0.3});
     }
 
     update (time, delta){
 
+        if (this.gameOver){
+            return;
+        }
+
         //  Any speed as long as 16 evenly divides by it
-        this.sx -= this.gameScene.SPEED;
+        this.sx -= this.SPEED;
         
         if (this.sx === -16)
         {
@@ -185,32 +190,6 @@ class BackgroundScene extends Phaser.Scene
         this.updateScrollY(this.sx + 16);
     }
 
-    updateCamera ()
-    {
-        const width = this.scale.gameSize.width;
-        const height = this.scale.gameSize.height;
-
-        const camera = this.cameras.main;
-
-        //  There is 240px of extra padding below the game area in the background graphic
-        //  so we account for it in the y offset (scaled by the game zoom factor)
-
-        const zoom = this.gameScene.getZoom();
-        const offset = 120 * zoom;
-
-        //  We can either zoom and re-center the camera:
-
-        camera.setZoom(zoom);
-        camera.centerOn(1400 / 2, (1200 / 2) + 120);
-
-        //  Or, if you want to put all of the Game Objects in this Scene into a layer,
-        //  you can position and scale that:
-
-        // this.layer.x = width / 2;
-        // this.layer.y = (height / 2) + offset;
-        // this.layer.setScale(zoom);
-    }
-  
     updateScrollY(y){
     
         const camera = this.cameras.main;
@@ -227,16 +206,21 @@ class BackgroundScene extends Phaser.Scene
         
     }
 
+    initScore(){
+        this.gameOver = false;
+        this.score = 0;
+        this.updateScore(0);
+    }
 }
 
 
 //  This Scene is aspect ratio locked at 640 x 960 (and scaled and centered accordingly)
 class GameScene extends Phaser.Scene
 {
-    SPEED = 2;
+    ADDBLOCK_SCORE = 50;
     GAME_WIDTH = 640;
     GAME_HEIGHT = 960;
-    TIME_SPEED = 300;
+    TIME_SPEED = 1200;
 
     ball;
     backgroundScene;
@@ -247,21 +231,20 @@ class GameScene extends Phaser.Scene
     blocks;
     walls;
 
-    last_wall;
-
-    gameOver = false;
-
     debugText;
     debugEnable = false;
 
     timedEvent;
 
     ballPassMusic;
+    blockCrashMusic;
 
     wallFlySpeed;
 
     changeColor;
     ballIndex = 0;
+
+    pauseIcon;
 
     constructor ()
     {
@@ -269,6 +252,7 @@ class GameScene extends Phaser.Scene
     }
 
     create(){
+ 
         const width = this.scale.gameSize.width;
         const height = this.scale.gameSize.height;
 
@@ -280,8 +264,6 @@ class GameScene extends Phaser.Scene
 
         this.backgroundScene = this.scene.get('BackgroundScene');
 
-        this.updateCamera();
-
         this.scale.on('resize', this.resize, this);
 
         //  -----------------------------------
@@ -292,48 +274,57 @@ class GameScene extends Phaser.Scene
         //  -----------------------------------
         //  -----------------------------------
 
+        this.pauseIcon = this.add.image(width - 20, 20, 'pause').setInteractive();
+        this.pauseIcon.on('pointerdown', this.pauseGame, this);
+
+
         //  Input Events
         this.cursors = this.input.keyboard.createCursorKeys();
 
         //this.input.mouse.disableContextMenu();
 
         this.ball = this.physics.add.sprite(width / 2, height / 2 + 80, 'ball').setScale(1.5);
-        this.ball.setBounce(0.2);
+        this.ball.setBounce(0.6);
         this.ball.setCollideWorldBounds(true);
         
-        this.blocks = this.add.group();
+        this.blocks = this.physics.add.staticGroup();
+        
+        var wallWidth = width / 4;
+        for(var i = 0; i < 4; i++){
+            for(var j = 0; j < 4; j++){
+                this.blocks.create(i * wallWidth, height - (j + 1) * 24, 'block').setOrigin(0, 0).setScale(wallWidth / 128, 1).refreshBody();
+            }
+        }
 
         this.walls = this.physics.add.group({
             defaultKey: 'wall',
-            maxSize: 50,
-            createCallBack: function (wall){
+            maxSize: 20,
+            createCallback: function (wall) {
                 wall.setName('wall' + this.getLength());
                 wall.body.setAllowGravity(false);
-
                 console.log('Created', wall.name);
             },
-            removeCallBack: function(wall){
+            removeCallback: function (wall) {
                 console.log('Removed', wall.name);
             }
         });
 
-        // var randomX = Phaser.Math.Between(25, this.sizer.width - 25);
-
-        //var wall = this.walls.create(randomX, 16, 'wall');
+        this.physics.add.collider(this.ball, this.blocks);
 
         this.physics.add.overlap(this.ball, this.walls, this.throughWall, null, this);
-        this.physics.add.collider(this.ball, this.blocks, this.hitBlock, null, this);
+        this.physics.add.collider(this.walls, this.blocks, this.crashBlock, null, this);
         
         this.timedEvent = this.time.addEvent({ delay: this.TIME_SPEED, callback: this.onEvent, callbackScope: this, loop: true });
         
-        this.ballPassMusic = this.sound.add('ball_through');
-        
+        this.ballPassMusic = this.sound.add('knock_wall');
+        this.blockCrashMusic = this.sound.add('block_crash');
+
         this.debugText = this.add.text(10, 50, '', {fontSize: '16px', fill: '#000'});
             
         this.wallFlySpeed = Phaser.Math.GetSpeed(600, 3);
 
-        this.changeColor = this.add.sprite(width - 30, height - 100, 'ball').setScale(2).setInteractive();
-        
+        this.changeColor = this.add.sprite(width - 30, height - 150, 'ball').setScale(2).setInteractive();
+        this.changeColor.alpha = 0.8;
         this.changeColor.on('pointerdown', this.changeBallColor, this);
 
         this.input.keyboard.on('keyup-SPACE', function (event) {
@@ -341,6 +332,7 @@ class GameScene extends Phaser.Scene
             this.changeBallColor(null);
     
         },this);
+
     }
     
     //  ------------------------
@@ -358,31 +350,6 @@ class GameScene extends Phaser.Scene
 
         this.parent.setSize(width, height);
         this.sizer.setSize(width, height);
-
-        this.updateCamera();
-    }
-
-    updateCamera ()
-    {
-        /*
-        const camera = this.cameras.main;
-
-        const x = Math.ceil((this.parent.width - this.sizer.width) * 0.5);
-        const y = 0;
-        const scaleX = this.sizer.width / this.GAME_WIDTH;
-        const scaleY = this.sizer.height / this.GAME_HEIGHT;
-
-        camera.setViewport(x, y, this.sizer.width, this.sizer.height);
-        camera.setZoom(Math.max(scaleX, scaleY));
-        camera.centerOn(this.GAME_WIDTH / 2, this.GAME_HEIGHT / 2);
-
-        this.backgroundScene.updateCamera();
-        */
-    }
-
-    getZoom ()
-    {
-        return this.cameras.main.zoom;
     }
 
     //  ------------------------
@@ -395,7 +362,7 @@ class GameScene extends Phaser.Scene
 
     update (time, delta)
     {
-        if (this.gameOver){
+        if (this.backgroundScene.gameOver){
             return;
         }
 
@@ -411,10 +378,6 @@ class GameScene extends Phaser.Scene
                 'Window Width:' + that.parent.width,
                 'Speed:' + delta * this.wallFlySpeed,
             ]);
-        }
-
-        if (that.parent.height - that.ball.y < 18){
-            that.ball.setBounce(1);
         }
 
         Phaser.Actions.IncY(this.walls.getChildren(), delta * this.wallFlySpeed);
@@ -451,19 +414,30 @@ class GameScene extends Phaser.Scene
             this.ball.setVelocityX(0);
         }
 
+        if ((p.isDown || this.cursors.up.isDown) && this.ball.body.blocked.down){
+
+            this.ball.setVelocityY(-250);
+        }
+
+        if (this.parent.height - this.ball.y < 24){
+            this.endGame();
+        }
     }
 
     // timer event
     onEvent (){
-
-        var randomX = Phaser.Math.Between(25, this.sizer.width - 25);
+        // console.log('time...');
+        var randomPart = Phaser.Math.Between(0, 3);
         var randomColor = Phaser.Math.Between(0, 2);
 
-        var wall = this.walls.get(randomX, 16);
+        var wallWidth = this.parent.width / 4;
+        var wall = this.walls.get(randomPart * wallWidth, 0);
 
         if (!wall){
             return;
         }
+
+        wall.setOrigin(0, 0).setScale(wallWidth / 51, 1);
 
         if (wall.isTinted){
             wall.clearTint();
@@ -479,38 +453,45 @@ class GameScene extends Phaser.Scene
             wall.setTint(0xff0000);
         }
 
-        wall.data = randomColor;
+        wall.setData('color', randomColor);
         wall.setActive(true).setVisible(true);
         wall.body.setAllowGravity(false);
     }
 
-    hitBlock (ball, block){
-        
-        this.physics.pause();
-
-        this.gameOver = true;
-    }
-
     throughWall(ball, wall){
+        if (wall.active && wall.visible){
+            if (wall.getData('color') === this.ballIndex)
+            {
+                this.backgroundScene.updateScore(10);
+
+                this.ballPassMusic.play( {volume: 0.8} );
         
-        if (this.last_wall && this.last_wall === wall){
-            return;
+                this.walls.killAndHide(wall);
+
+                // Every 100 points add 1 row block
+                if (this.backgroundScene.score % this.ADDBLOCK_SCORE == 0){
+                    this.blocks.children.iterate(function(block){
+                        if (block.active && block.visible){
+                            block.y -= block.height;
+                            block.refreshBody();
+                        }
+                    });
+
+                    var wallWidth = this.parent.width / 4;
+                    var height = this.parent.height;
+                    for(var i = 0; i < 4; i++){
+                        this.blocks.create(i * wallWidth, height - 24, 'block').setOrigin(0, 0).setScale(wallWidth / 128, 1).refreshBody();
+                    }
+
+                    if (ball.body.blocked.isDown){
+                        ball.y -= 24;
+                    }
+                }
+            }
+            else{
+                this.endGame();
+            }
         }
-        //wall.disableBody(true, true);
-
-        if (wall.data === this.ballIndex)
-        {
-
-            this.backgroundScene.updateScore(10);
-
-            this.ballPassMusic.play();
-    
-        }
-        else{
-            
-        }
-
-        this.last_wall = wall;
     }
 
     changeBallColor(event){
@@ -518,6 +499,148 @@ class GameScene extends Phaser.Scene
         
         this.changeColor.setFrame(this.ballIndex);
         this.ball.setFrame(this.ballIndex);
+    }
+
+    crashBlock(wall, block){
+        
+        if (wall.active && wall.visible){
+
+            this.blockCrashMusic.play( {volume: 0.8} );
+
+            block.disableBody(true, true);
+
+            this.walls.killAndHide(wall);
+        }
+    }
+
+    pauseGame (){        
+        this.scene.switch('PauseScene');
+    }
+
+    endGame(){
+
+        this.backgroundScene.gameOver = true;
+
+        this.physics.pause();
+
+        this.timedEvent.remove(false);
+
+        this.scene.start('RestartScene');
+             
+    }
+}
+
+
+// restart scene
+class RestartScene extends Phaser.Scene
+{
+    restartButton;
+    restartButton_Text;
+
+    constructor(){
+        super('RestartScene');
+    }
+
+    create(){
+
+        const width = this.scale.gameSize.width;
+        const height = this.scale.gameSize.height;
+
+        var x = width / 2 - 150;
+        var y = height / 2 + 50;
+        var name = 'Restart';
+
+        // this.add.image(x, y - 200,'logo').setOrigin(0, 0).setScale(3);
+
+        this.restartButton = this.add.image(x + 150, y - 30, 'button', 0).setInteractive();
+        this.restartButton.name = name;
+        this.restartButton.setScale(2.5);
+    
+        this.restartButton_Text = this.add.bitmapText(x + 125, y - 48, 'nokia16').setScale(2).setTint(0x0000ff);
+        this.restartButton_Text.setText(name);
+        this.restartButton_Text.x += (this.restartButton.width - this.restartButton_Text.width) / 2;
+
+        this.restartButton.on('pointerover', function(event){
+            this.restartButton.alpha = 0.5;
+        }, this);
+
+        this.restartButton.on('pointerout', function(event){
+            this.restartButton.alpha = 1;
+        }, this);
+
+        this.restartButton.once('pointerup', this.startGame, this);
+
+        this.input.keyboard.on('keyup-ENTER', function (event) {
+
+            this.startGame(null);
+    
+        },this);
+    }
+
+    startGame(event){
+
+        // var gameScene = this.scene.get('GameScene');
+        // gameScene.stop();
+
+        var bgScene = this.scene.get('BackgroundScene');
+        bgScene.initScore();
+
+        this.scene.start('StartScene');
+        
+    }
+}
+
+// pause scene
+class PauseScene extends Phaser.Scene
+{
+    pauseButton;
+    pauseButton_Text;
+
+    constructor(){
+        super('PauseScene');
+    }
+
+    create(){
+
+        const width = this.scale.gameSize.width;
+        const height = this.scale.gameSize.height;
+
+        var x = width / 2 - 150;
+        var y = height / 2 + 50;
+        var name = 'Resume';
+
+        // this.add.image(x, y - 200,'logo').setOrigin(0, 0).setScale(3);
+
+        this.pauseButton = this.add.image(x + 150, y - 30, 'button', 0).setInteractive();
+        this.pauseButton.name = name;
+        this.pauseButton.setScale(2.5);
+    
+        this.pauseButton_Text = this.add.bitmapText(x + 125, y - 48, 'nokia16').setScale(2).setTint(0x0000ff);
+        this.pauseButton_Text.setText(name);
+        this.pauseButton_Text.x += (this.pauseButton.width - this.pauseButton_Text.width) / 2;
+
+        this.pauseButton.on('pointerover', function(event){
+            this.pauseButton.alpha = 0.5;
+        }, this);
+
+        this.pauseButton.on('pointerout', function(event){
+            this.pauseButton.alpha = 1;
+        }, this);
+
+        this.pauseButton.once('pointerup', this.resumeGame, this);
+
+        this.input.keyboard.on('keyup-SPACE', function (event) {
+
+            this.resumeGame(null);
+    
+        },this);
+    }
+
+    resumeGame(event){
+
+        this.scene.stop();
+
+        this.scene.wake('GameScene');
     }
 }
 
@@ -544,7 +667,7 @@ const config = {
             debug: false
         }
     },
-    scene: [ BackgroundScene, StartScene, GameScene ]
+    scene: [ BackgroundScene, StartScene, GameScene, RestartScene, PauseScene ]
 };
 
 const game = new Phaser.Game(config);
