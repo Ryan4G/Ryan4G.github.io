@@ -221,6 +221,9 @@ class GameScene extends Phaser.Scene
     GAME_WIDTH = 640;
     GAME_HEIGHT = 960;
     TIME_SPEED = 1200;
+    BALL_MOVE_SPPED = 200;
+    BALL_ROTATE_ANGLE = 10;
+    BALL_BOUNCE_HEIGHT = 300;
 
     ball;
     backgroundScene;
@@ -242,7 +245,6 @@ class GameScene extends Phaser.Scene
     wallFlySpeed;
 
     changeColor;
-    ballIndex = 0;
 
     pauseIcon;
 
@@ -253,6 +255,8 @@ class GameScene extends Phaser.Scene
 
     create(){
  
+        this.data.set('color', 0);
+
         const width = this.scale.gameSize.width;
         const height = this.scale.gameSize.height;
 
@@ -284,7 +288,7 @@ class GameScene extends Phaser.Scene
         //this.input.mouse.disableContextMenu();
 
         this.ball = this.physics.add.sprite(width / 2, height / 2 + 80, 'ball').setScale(1.5);
-        this.ball.setBounce(0.6);
+        this.ball.setBounce(0.8);
         this.ball.setCollideWorldBounds(true);
         
         this.blocks = this.physics.add.staticGroup();
@@ -399,14 +403,14 @@ class GameScene extends Phaser.Scene
 
         if (deltaX < 0 || this.cursors.left.isDown)
         {
-            this.ball.setVelocityX(-160);
-            this.ball.angle -= 10;
+            this.ball.setVelocityX(-this.BALL_MOVE_SPPED);
+            this.ball.angle -= this.BALL_ROTATE_ANGLE;
             //player.anims.play('left', true);
         }
         else if (deltaX > 0 || this.cursors.right.isDown)
         {
-            this.ball.setVelocityX(160);
-            this.ball.angle += 10;
+            this.ball.setVelocityX(this.BALL_MOVE_SPPED);
+            this.ball.angle += this.BALL_ROTATE_ANGLE;
 
             //player.anims.play('right', true);
         }
@@ -416,7 +420,7 @@ class GameScene extends Phaser.Scene
 
         if ((p.isDown || this.cursors.up.isDown) && this.ball.body.blocked.down){
 
-            this.ball.setVelocityY(-250);
+            this.ball.setVelocityY(-this.BALL_BOUNCE_HEIGHT);
         }
 
         if (this.parent.height - this.ball.y < 24){
@@ -460,7 +464,7 @@ class GameScene extends Phaser.Scene
 
     throughWall(ball, wall){
         if (wall.active && wall.visible){
-            if (wall.getData('color') === this.ballIndex)
+            if (wall.getData('color') === this.data.get('color'))
             {
                 this.backgroundScene.updateScore(10);
 
@@ -495,10 +499,14 @@ class GameScene extends Phaser.Scene
     }
 
     changeBallColor(event){
-        this.ballIndex = this.ballIndex > 1 ? 0 : this.ballIndex + 1;
         
-        this.changeColor.setFrame(this.ballIndex);
-        this.ball.setFrame(this.ballIndex);
+        var ballColor = this.data.get('color');
+        ballColor = ballColor > 1 ? 0 : ballColor + 1;
+        
+        this.data.set('color', ballColor);
+        
+        this.changeColor.setFrame(ballColor);
+        this.ball.setFrame(ballColor);
     }
 
     crashBlock(wall, block){
