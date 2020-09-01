@@ -31,9 +31,9 @@ class StartScene extends Phaser.Scene
         this.startButton_Text.setText(name);
         this.startButton_Text.x += (this.startButton.width - this.startButton_Text.width) / 2;
 
-        this.startBallArea = this.add.image(x + 150, y + 30, 'startarea').setScale(2);
+        this.startBallArea = this.add.image(x + 150, y + 30, 'startarea').setScale(2.2);
 
-        this.startBall = this.add.image(x + 150, y + 30, 'ball').setScale(1.5);
+        this.startBall = this.add.image(x + 150, y + 30, 'ball').setScale(0.8);
 
         this.startButton.on('pointerover', function(event){
             this.startButton.alpha = 0.5;
@@ -95,13 +95,18 @@ class BackgroundScene extends Phaser.Scene
 
         this.load.spritesheet(
             'ball',
-            'assets/sprites/ball_frame.png',
-            {frameWidth:22, frameHeight:22}
+            'assets/sprites/ball_new.png',
+            {frameWidth:50, frameHeight:50}
         );
 
         this.load.image('block','assets/sprites/block-wall.png');
-        this.load.image('wall','assets/sprites/red-pass-wall.png');
         this.load.image('icon', 'assets/ui/score-icon.png');
+		  this.load.spritesheet(
+            'wall',
+            'assets/sprites/wall-all.png',
+            {frameWidth:110, frameHeight:66}
+        );
+        
         
         this.load.image('pause', 'assets/ui/pause-icon.png');
 
@@ -109,9 +114,10 @@ class BackgroundScene extends Phaser.Scene
         this.load.bitmapFont('nokia', 'assets/fonts/bitmap/nokia16black.png', 'assets/fonts/bitmap/nokia16black.xml');
     
         // Music
-        this.load.audio('bg', 'assets/sounds/bg_loop.mp3');
+        this.load.audio('bg', 'assets/sounds/bg-happy.mp3');
         this.load.audio('block_crash', 'assets/sounds/block_crash.mp3');
         this.load.audio('knock_wall', 'assets/sounds/knock_wall.mp3');
+        this.load.audio('ball_rainbow', 'assets/sounds/ball_rainbow.mp3');
         
     }
 
@@ -210,6 +216,7 @@ class BackgroundScene extends Phaser.Scene
         this.gameOver = false;
         this.score = 0;
         this.updateScore(0);
+        this.bgMusic.setRate(1);
     }
 }
 
@@ -221,9 +228,15 @@ class GameScene extends Phaser.Scene
     GAME_WIDTH = 640;
     GAME_HEIGHT = 960;
     TIME_SPEED = 1200;
+
     BALL_MOVE_SPPED = 200;
-    BALL_ROTATE_ANGLE = 10;
-    BALL_BOUNCE_HEIGHT = 300;
+    BALL_ROTATE_ANGLE = 15;
+    BALL_BOUNCE_HEIGHT = 260;
+
+    TIME_REDUCE_SPAN = 400;
+    TIME_REDUCE_SCORE = 500;
+
+    RAINBOW_DURING_TIMES = 12;
 
     ball;
     backgroundScene;
@@ -240,13 +253,27 @@ class GameScene extends Phaser.Scene
     timedEvent;
 
     ballPassMusic;
+    ballRainbowMusic;
     blockCrashMusic;
 
     wallFlySpeed;
 
     changeColor;
+    nextColor;
+
+    changeColorCD = false;
 
     pauseIcon;
+
+    rainbowExist;
+    ballGotRainbow;
+    rainbowCounterDown;
+    rainbowBlingTime;
+
+    rainbowBall;
+    rainbowCDText;
+
+    currentLevel = 0;
 
     constructor ()
     {
@@ -255,6 +282,12 @@ class GameScene extends Phaser.Scene
 
     create(){
  
+        this.rainbowExist = false;
+        this.ballGotRainbow = false;
+        this.rainbowCounterDown = Phaser.Math.Between(10, 15);
+        this.rainbowBlingTime = 0;
+        this.currentLevel = 0;
+
         this.data.set('color', 0);
 
         const width = this.scale.gameSize.width;
@@ -283,13 +316,26 @@ class GameScene extends Phaser.Scene
 
 
         //  Input Events
+        this.input.addPointer(1);
         this.cursors = this.input.keyboard.createCursorKeys();
 
         //this.input.mouse.disableContextMenu();
 
-        this.ball = this.physics.add.sprite(width / 2, height / 2 + 80, 'ball').setScale(1.5);
+        this.ball = this.physics.add.sprite(width / 2, height / 2 + 80, 'ball').setScale(0.8);
         this.ball.setBounce(0.8);
         this.ball.setCollideWorldBounds(true);
+        
+        this.rainbowBall= this.add.sprite(20, 50, 'ball').setScale(0.44);
+        
+        this.rainbowCDText = this.add.bitmapText(35, 40, 'nokia16').setScale(1.5);
+        
+        // animate
+        this.anims.create({
+            key: 'bling',
+            frames: this.anims.generateFrameNumbers('ball', {start: 0, end: 2}),
+            frameRate: 10,
+            repeat: -1
+        });
         
         this.blocks = this.physics.add.staticGroup();
         
@@ -321,15 +367,31 @@ class GameScene extends Phaser.Scene
         this.timedEvent = this.time.addEvent({ delay: this.TIME_SPEED, callback: this.onEvent, callbackScope: this, loop: true });
         
         this.ballPassMusic = this.sound.add('knock_wall');
+        this.ballRainbowMusic = this.sound.add('ball_rainbow');
         this.blockCrashMusic = this.sound.add('block_crash');
 
-        this.debugText = this.add.text(10, 50, '', {fontSize: '16px', fill: '#000'});
+        this.debugText = this.add.text(10, 80, '', {fontSize: '16px', fill: '#000'});
             
         this.wallFlySpeed = Phaser.Math.GetSpeed(600, 3);
 
-        this.changeColor = this.add.sprite(width - 30, height - 150, 'ball').setScale(2).setInteractive();
-        this.changeColor.alpha = 0.8;
+        this.changeColor = this.add.sprite(width - 30, height - 200, 'ball').setScale(1).setInteractive();
+        this.changeColor.alpha = 0.9;
         this.changeColor.on('pointerdown', this.changeBallColor, this);
+
+        var graphics = this.add.graphics({ lineStyle: { width: 1, color: 0xffffff } });
+        graphics.clear();
+
+        this.nextColor = this.add.sprite(width - 30, height - 150, 'ball').setScale(0.65);
+        this.nextColor.alpha = 0.9;
+        this.nextColor.setFrame(1);
+        
+        var nextRect = new Phaser.Geom.Rectangle();
+        var nexrRectWidth = 35;
+        nextRect.x = this.nextColor.x - nexrRectWidth / 2;
+        nextRect.y = this.nextColor.y - nexrRectWidth / 2;
+        nextRect.width = nextRect.height = nexrRectWidth;
+
+        graphics.strokeRectShape(nextRect)
 
         this.input.keyboard.on('keyup-SPACE', function (event) {
 
@@ -337,6 +399,11 @@ class GameScene extends Phaser.Scene
     
         },this);
 
+        this.input.on('pointerup', function (pointer) {
+
+            this.changeColorCD = false;
+    
+        }, this);
     }
     
     //  ------------------------
@@ -381,7 +448,21 @@ class GameScene extends Phaser.Scene
                 'Window Height:' + that.parent.height,
                 'Window Width:' + that.parent.width,
                 'Speed:' + delta * this.wallFlySpeed,
+                'Pointer1:' + this.input.pointer1.isDown,
+                'Pointer2:' + this.input.pointer2.isDown,
+                'Pointer1 Duration:' + this.input.pointer1.getDuration(),
+                'Pointer2 Duration:' + this.input.pointer2.getDuration(),
             ]);
+        }
+
+        if (this.ballGotRainbow){
+            var rainbowText = (Array(2).join(0) + (this.RAINBOW_DURING_TIMES - this.rainbowBlingTime)).slice(-2);
+            this.rainbowCDText.setText(rainbowText);
+        }
+        else{
+            this.rainbowCDText.visible = false;
+            this.rainbowBall.visible = false;
+            this.rainbowBall.anims.stop();
         }
 
         Phaser.Actions.IncY(this.walls.getChildren(), delta * this.wallFlySpeed);
@@ -395,24 +476,23 @@ class GameScene extends Phaser.Scene
         var p = this.input.activePointer;
 
         var deltaX = 0;
+        var rollSpeed = this.ballGotRainbow ? this.BALL_MOVE_SPPED + 50 : this.BALL_MOVE_SPPED;
+        var rollAngle = this.ballGotRainbow ? this.BALL_ROTATE_ANGLE + 3 : this.BALL_ROTATE_ANGLE;
 
-        if (p.isDown)
+        if (p.isDown && p.getDuration() > 100)
         {
-            deltaX = p.x - this.ball.x;
+            deltaX = p.x - this.parent.width / 2;
         }
 
         if (deltaX < 0 || this.cursors.left.isDown)
         {
-            this.ball.setVelocityX(-this.BALL_MOVE_SPPED);
-            this.ball.angle -= this.BALL_ROTATE_ANGLE;
-            //player.anims.play('left', true);
+            this.ball.setVelocityX(-rollSpeed);
+            this.ball.angle -= rollAngle;
         }
         else if (deltaX > 0 || this.cursors.right.isDown)
         {
-            this.ball.setVelocityX(this.BALL_MOVE_SPPED);
-            this.ball.angle += this.BALL_ROTATE_ANGLE;
-
-            //player.anims.play('right', true);
+            this.ball.setVelocityX(rollSpeed);
+            this.ball.angle += rollAngle;
         }
         else{
             this.ball.setVelocityX(0);
@@ -423,6 +503,18 @@ class GameScene extends Phaser.Scene
             this.ball.setVelocityY(-this.BALL_BOUNCE_HEIGHT);
         }
 
+        // two pointer is down state to change color
+        if (
+            !this.changeColorCD &&
+            this.input.pointer1.isDown &&
+            this.input.pointer2.isDown &&
+            this.input.pointer1.getDuration() > 80 &&
+            this.input.pointer2.getDuration() > 80             
+            ){
+                this.changeColorCD = true;
+                this.changeBallColor(null);
+        }
+
         if (this.parent.height - this.ball.y < 24){
             this.endGame();
         }
@@ -430,7 +522,7 @@ class GameScene extends Phaser.Scene
 
     // timer event
     onEvent (){
-        // console.log('time...');
+        
         var randomPart = Phaser.Math.Between(0, 3);
         var randomColor = Phaser.Math.Between(0, 2);
 
@@ -441,34 +533,86 @@ class GameScene extends Phaser.Scene
             return;
         }
 
-        wall.setOrigin(0, 0).setScale(wallWidth / 51, 1);
+        if (this.ballGotRainbow){
+            if (this.rainbowBlingTime < this.RAINBOW_DURING_TIMES){
+                this.rainbowBlingTime++;
+            }
+            else{
+                this.ballGotRainbow = false;
+
+                this.ball.anims.stop(); 
+                
+                var ballColor = this.data.get('color');
+                this.ball.setFrame(ballColor);
+            }
+        }
+        
+        if (!this.rainbowExist && !this.ballGotRainbow){
+            this.rainbowCounterDown--;            
+        }
 
         if (wall.isTinted){
             wall.clearTint();
         }
 
-        if (randomColor === 1){
-            wall.setTint(0x00ff00);
-        }
-        else if (randomColor === 2){
-            wall.setTint(0x0000ff);
-        }
-        else{
-            wall.setTint(0xff0000);
-        }
+        wall.setOrigin(0, 0).setScale(wallWidth / 110, wallWidth / 160);
 
-        wall.setData('color', randomColor);
-        wall.setActive(true).setVisible(true);
-        wall.body.setAllowGravity(false);
+        // show the rainbow
+        if (this.rainbowCounterDown <= 0)
+        {
+            this.rainbowCounterDown = Phaser.Math.Between(20, 30);
+
+            this.rainbowExist = true;
+
+            wall.setFrame(3);
+            
+            wall.setData('color', 4);
+            wall.setActive(true).setVisible(true);
+            wall.body.setAllowGravity(false);
+        }
+        else
+        {
+            wall.setFrame(0);
+
+            if (randomColor === 1){
+                wall.setFrame(1);
+            }
+            else if (randomColor === 2){
+                wall.setFrame(2);
+            }
+            else{
+                wall.setFrame(0);
+            }
+
+            wall.setData('color', randomColor);
+            wall.setActive(true).setVisible(true);
+            wall.body.setAllowGravity(false);
+        }
     }
 
     throughWall(ball, wall){
         if (wall.active && wall.visible){
-            if (wall.getData('color') === this.data.get('color'))
+            if (wall.getData('color') === this.data.get('color') || wall.getData('color') === 4 || this.ballGotRainbow)
             {
+                if (wall.getData('color') === 4){
+                    this.ballRainbowMusic.play( {volume: 0.8} );
+
+                    this.ballGotRainbow = true;
+                    this.rainbowExist = false;
+                    this.rainbowBlingTime = 0;
+                    
+                    this.ball.anims.play('bling', true);
+                    this.rainbowBall.anims.play('bling', true);
+
+                    this.rainbowCDText.visible = true;
+                    this.rainbowBall.visible = true;
+                }
+				else{
+                    this.ballPassMusic.play( {volume: 0.8} );
+                }
+
                 this.backgroundScene.updateScore(10);
 
-                this.ballPassMusic.play( {volume: 0.8} );
         
                 this.walls.killAndHide(wall);
 
@@ -491,6 +635,17 @@ class GameScene extends Phaser.Scene
                         ball.y -= 24;
                     }
                 }
+
+                if (this.currentLevel === 0 && this.backgroundScene.score >= this.TIME_REDUCE_SCORE)
+                {
+                    this.backgroundScene.bgMusic.setRate(1.3);
+
+                    this.currentLevel = 1;
+
+                    this.timedEvent.remove(false);
+        
+                    this.timedEvent = this.time.addEvent({ delay: this.TIME_SPEED - this.TIME_REDUCE_SPAN, callback: this.onEvent, callbackScope: this, loop: true });
+                }
             }
             else{
                 this.endGame();
@@ -499,21 +654,33 @@ class GameScene extends Phaser.Scene
     }
 
     changeBallColor(event){
-        
+                
+        if (this.ballGotRainbow){
+            return;
+        }
+
         var ballColor = this.data.get('color');
-        ballColor = ballColor > 1 ? 0 : ballColor + 1;
         
+        var nextColor = ballColor < 1 ? 2 : ballColor - 1;
+
+        ballColor = ballColor > 1 ? 0 : ballColor + 1;
+
         this.data.set('color', ballColor);
         
         this.changeColor.setFrame(ballColor);
         this.ball.setFrame(ballColor);
+        this.nextColor.setFrame(nextColor);
     }
 
     crashBlock(wall, block){
         
         if (wall.active && wall.visible){
 
-            this.blockCrashMusic.play( {volume: 0.8} );
+            if (wall.getData('color') === 4){
+                this.rainbowExist = false;
+            }
+
+            this.blockCrashMusic.play( {volume: 0.6} );
 
             block.disableBody(true, true);
 
