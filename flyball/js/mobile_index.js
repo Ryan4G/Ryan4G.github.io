@@ -500,8 +500,7 @@ class GameScene extends Phaser.Scene
                 'Sizer Width:' + that.sizer.width,
                 'Ball X:' + that.ball.x,
                 'Ball Y:' + that.ball.y,
-                'Window Height:' + that.parent.height,
-                'Window Width:' + that.parent.width,
+                'Ball IsDown:' + that.ball.body.blocked.down,
                 'Speed:' + delta * this.wallFlySpeed,
                 'Pointer1:' + this.input.pointer1.isDown,
                 'Pointer2:' + this.input.pointer2.isDown,
@@ -676,6 +675,11 @@ class GameScene extends Phaser.Scene
                 var currScore = this.backgroundScene.getScore();
 
                 if (currScore % this.ADDBLOCK_SCORE == 0){
+
+                    if (ball.body.blocked.down){
+                        ball.y -= 24;
+                    }
+
                     this.blocks.children.iterate(function(block){
                         if (block.active && block.visible){
                             block.y -= block.height;
@@ -689,9 +693,6 @@ class GameScene extends Phaser.Scene
                         this.blocks.create(i * wallWidth, height - 24, 'block').setOrigin(0, 0).setScale(wallWidth / 128, 1).refreshBody();
                     }
 
-                    if (ball.body.blocked.isDown){
-                        ball.y -= 24;
-                    }
                 }
 
                 if (this.currentLevel === 0 && currScore >= this.TIME_REDUCE_SCORE)
@@ -790,7 +791,7 @@ class RestartScene extends Phaser.Scene
         var y = height / 2;
         var name = 'Restart';
 
-        this.add.image(x, y - 140,'end-logo').setScale(2.8);
+        this.add.image(x, y - 140,'end-logo').setScale(2.6);
 
         this.add.image(x - 80, y - 40,'end-best').setScale(2.2);
 
