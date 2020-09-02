@@ -21,7 +21,7 @@ class StartScene extends Phaser.Scene
         var y = height / 2 + 50;
         var name = 'Start';
 
-        this.add.image(x, y - 200,'logo').setOrigin(0, 0).setScale(3);
+        this.add.image(x, y - 200,'logo').setOrigin(0, 0).setScale(1.5);
 
         this.startButton = this.add.image(x + 150, y - 30, 'button', 0).setInteractive();
         this.startButton.name = name;
@@ -72,7 +72,6 @@ class BackgroundScene extends Phaser.Scene
     tiles = [ 7, 7, 7, 6, 6, 6, 0, 0, 0, 1, 1, 2, 3, 4, 5 ];
     gameScene;
 
-    score = 0;
     scoreText;
 
     bgMusic;
@@ -86,7 +85,7 @@ class BackgroundScene extends Phaser.Scene
     preload ()
     {
         // Start Scene Metirals
-        this.load.image('logo', 'assets/ui/Banner.png');
+        this.load.image('logo', 'assets/ui/Banner256.png');
         this.load.image('button', 'assets/ui/Banner-2.png');
         this.load.image('startarea', 'assets/ui/Banner-3.png');
  
@@ -104,12 +103,18 @@ class BackgroundScene extends Phaser.Scene
 		  this.load.spritesheet(
             'wall',
             'assets/sprites/wall-all.png',
-            {frameWidth:110, frameHeight:66}
+            {frameWidth:113, frameHeight:66}
         );
         
         
         this.load.image('pause', 'assets/ui/pause-icon.png');
 
+        this.load.image('end-logo', 'assets/ui/ending.png');
+        this.load.image('end-best', 'assets/ui/ending2.png');
+        this.load.image('end-line', 'assets/ui/ending3.png');
+        this.load.image('end-score', 'assets/ui/ending4.png');
+
+        // Font
         this.load.bitmapFont('nokia16', 'assets/fonts/bitmap/nokia16.png', 'assets/fonts/bitmap/nokia16.xml');
         this.load.bitmapFont('nokia', 'assets/fonts/bitmap/nokia16black.png', 'assets/fonts/bitmap/nokia16black.xml');
     
@@ -149,13 +154,17 @@ class BackgroundScene extends Phaser.Scene
         
         this.add.image(10, 10, 'icon').setOrigin(0, 0).setScale(2).setScrollFactor(0);;
 
+        // data
+        this.data.set({score: 0, bestScore: 0});
+
+        
         this.updateScore(0);
         
         this.scene.launch('StartScene');
 
         this.bgMusic = this.sound.add('bg', { loop: true });
 
-        this.bgMusic.play({volume: 0.3});
+        this.bgMusic.play({volume: 0.5});
     }
 
     update (time, delta){
@@ -205,18 +214,63 @@ class BackgroundScene extends Phaser.Scene
 
     updateScore(inc)
     {
-        this.score += inc;
+        var score = this.data.get('score'); 
+        
+        if (!score){
+            score = 0;
+        }
 
-        this.scoreText = (Array(this.SCORE_NUM).join(0) + this.score).slice(-this.SCORE_NUM);
+        score += inc;
+
+        this.scoreText = (Array(this.SCORE_NUM).join(0) + score).slice(-this.SCORE_NUM);
         this.text.setText(this.scoreText);
         
+        this.data.set('score', score);
+
+        var bestScore = this.data.get('bestScore');
+
+        if (!bestScore){
+            bestScore = 0;
+        }
+
+        bestScore = Math.max(score, bestScore);
+
+        this.data.set('bestScore', bestScore);
     }
 
     initScore(){
         this.gameOver = false;
-        this.score = 0;
+
+        var score = this.data.get('score');
+
+        if (score){
+            this.data.set('score', 0);
+        }
+
         this.updateScore(0);
         this.bgMusic.setRate(1);
+    }
+
+    getScore(){
+
+        var score = this.data.get('score');
+
+        if (!score){
+            score = 0;
+        }
+
+        return score;
+    }
+
+    getBestScore(){
+
+        var bestScore = this.data.get('bestScore');
+
+        if (!bestScore){
+            bestScore = 0;
+        }
+
+        return bestScore;
     }
 }
 
@@ -231,12 +285,13 @@ class GameScene extends Phaser.Scene
 
     BALL_MOVE_SPPED = 200;
     BALL_ROTATE_ANGLE = 15;
-    BALL_BOUNCE_HEIGHT = 260;
+    BALL_BOUNCE_HEIGHT = 270;
 
-    TIME_REDUCE_SPAN = 400;
+    TIME_REDUCE_SPAN = 450;
     TIME_REDUCE_SCORE = 500;
 
     RAINBOW_DURING_TIMES = 12;
+    HIGHSCORE_RATE = 1.4;
 
     ball;
     backgroundScene;
@@ -555,7 +610,7 @@ class GameScene extends Phaser.Scene
             wall.clearTint();
         }
 
-        wall.setOrigin(0, 0).setScale(wallWidth / 110, wallWidth / 160);
+        wall.setOrigin(0, 0).setScale(wallWidth / 113, wallWidth / 160);
 
         // show the rainbow
         if (this.rainbowCounterDown <= 0)
@@ -617,7 +672,10 @@ class GameScene extends Phaser.Scene
                 this.walls.killAndHide(wall);
 
                 // Every 100 points add 1 row block
-                if (this.backgroundScene.score % this.ADDBLOCK_SCORE == 0){
+
+                var currScore = this.backgroundScene.getScore();
+
+                if (currScore % this.ADDBLOCK_SCORE == 0){
                     this.blocks.children.iterate(function(block){
                         if (block.active && block.visible){
                             block.y -= block.height;
@@ -636,9 +694,9 @@ class GameScene extends Phaser.Scene
                     }
                 }
 
-                if (this.currentLevel === 0 && this.backgroundScene.score >= this.TIME_REDUCE_SCORE)
+                if (this.currentLevel === 0 && currScore >= this.TIME_REDUCE_SCORE)
                 {
-                    this.backgroundScene.bgMusic.setRate(1.3);
+                    this.backgroundScene.bgMusic.setRate(this.HIGHSCORE_RATE);
 
                     this.currentLevel = 1;
 
@@ -709,8 +767,15 @@ class GameScene extends Phaser.Scene
 // restart scene
 class RestartScene extends Phaser.Scene
 {
+    SCORE_NUM = 6;
+
     restartButton;
     restartButton_Text;
+
+    bestScore_Text;
+    currScore_Text;
+
+    backgroundScene;
 
     constructor(){
         super('RestartScene');
@@ -721,19 +786,28 @@ class RestartScene extends Phaser.Scene
         const width = this.scale.gameSize.width;
         const height = this.scale.gameSize.height;
 
-        var x = width / 2 - 150;
-        var y = height / 2 + 50;
+        var x = width / 2;
+        var y = height / 2;
         var name = 'Restart';
 
-        // this.add.image(x, y - 200,'logo').setOrigin(0, 0).setScale(3);
+        this.add.image(x, y - 140,'end-logo').setScale(2.8);
 
-        this.restartButton = this.add.image(x + 150, y - 30, 'button', 0).setInteractive();
+        this.add.image(x - 80, y - 40,'end-best').setScale(2.2);
+
+        this.add.image(x, y - 10,'end-line').setScale(2, 1);
+
+        this.add.image(x, y + 35,'end-score').setScale(1.8, 2)
+
+        this.restartButton = this.add.image(x, y + 100, 'button', 0).setInteractive();
         this.restartButton.name = name;
         this.restartButton.setScale(2.5);
     
-        this.restartButton_Text = this.add.bitmapText(x + 125, y - 48, 'nokia16').setScale(2).setTint(0x0000ff);
+        this.restartButton_Text = this.add.bitmapText(x - 25, y + 85, 'nokia16').setScale(2).setTint(0x0000ff);
         this.restartButton_Text.setText(name);
         this.restartButton_Text.x += (this.restartButton.width - this.restartButton_Text.width) / 2;
+
+        this.bestScore_Text = this.add.bitmapText(x + 5, y - 55, 'nokia16').setScale(2.2);
+        this.currScore_Text = this.add.bitmapText(x - 62, y + 18, 'nokia16').setScale(2.2);
 
         this.restartButton.on('pointerover', function(event){
             this.restartButton.alpha = 0.5;
@@ -750,6 +824,14 @@ class RestartScene extends Phaser.Scene
             this.startGame(null);
     
         },this);
+
+        this.backgroundScene = this.scene.get('BackgroundScene');
+
+        var bestScore = this.backgroundScene.getBestScore();
+        var currScore = this.backgroundScene.getScore();
+
+        this.bestScore_Text.setText((Array(this.SCORE_NUM).join(0) + bestScore).slice(-this.SCORE_NUM));
+        this.currScore_Text.setText((Array(this.SCORE_NUM).join(0) + currScore).slice(-this.SCORE_NUM));
     }
 
     startGame(event){
@@ -757,8 +839,7 @@ class RestartScene extends Phaser.Scene
         // var gameScene = this.scene.get('GameScene');
         // gameScene.stop();
 
-        var bgScene = this.scene.get('BackgroundScene');
-        bgScene.initScore();
+        this.backgroundScene.initScore();
 
         this.scene.start('StartScene');
         
