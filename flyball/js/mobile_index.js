@@ -287,7 +287,7 @@ class GameScene extends Phaser.Scene
     BALL_ROTATE_ANGLE = 15;
     BALL_BOUNCE_HEIGHT = 270;
 
-    TIME_REDUCE_SPAN = 450;
+    TIME_REDUCE_SPAN = 350;
     TIME_REDUCE_SCORE = 500;
 
     RAINBOW_DURING_TIMES = 12;
@@ -501,11 +501,12 @@ class GameScene extends Phaser.Scene
                 'Ball X:' + that.ball.x,
                 'Ball Y:' + that.ball.y,
                 'Ball IsDown:' + that.ball.body.blocked.down,
-                'Speed:' + delta * this.wallFlySpeed,
-                'Pointer1:' + this.input.pointer1.isDown,
-                'Pointer2:' + this.input.pointer2.isDown,
-                'Pointer1 Duration:' + this.input.pointer1.getDuration(),
-                'Pointer2 Duration:' + this.input.pointer2.getDuration(),
+                'Ball Embedded:' + that.ball.body.embedded,
+                'Speed:' + delta * that.wallFlySpeed,
+                'Pointer1:' + that.input.pointer1.isDown,
+                'Pointer2:' + that.input.pointer2.isDown,
+                'Pointer1 Duration:' + that.input.pointer1.getDuration(),
+                'Pointer2 Duration:' + that.input.pointer2.getDuration(),
             ]);
         }
 
@@ -675,11 +676,7 @@ class GameScene extends Phaser.Scene
                 var currScore = this.backgroundScene.getScore();
 
                 if (currScore % this.ADDBLOCK_SCORE == 0){
-
-                    if (ball.body.blocked.down){
-                        ball.y -= 24;
-                    }
-
+                    
                     this.blocks.children.iterate(function(block){
                         if (block.active && block.visible){
                             block.y -= block.height;
@@ -693,6 +690,10 @@ class GameScene extends Phaser.Scene
                         this.blocks.create(i * wallWidth, height - 24, 'block').setOrigin(0, 0).setScale(wallWidth / 128, 1).refreshBody();
                     }
 
+                    if (ball.body.blocked.down || ball.body.embedded){
+                        ball.y -= 24;
+                    }
+
                 }
 
                 if (this.currentLevel === 0 && currScore >= this.TIME_REDUCE_SCORE)
@@ -700,6 +701,8 @@ class GameScene extends Phaser.Scene
                     this.backgroundScene.bgMusic.setRate(this.HIGHSCORE_RATE);
 
                     this.currentLevel = 1;
+
+                    this.wallFlySpeed = Phaser.Math.GetSpeed(600, 2.3);
 
                     this.timedEvent.remove(false);
         
