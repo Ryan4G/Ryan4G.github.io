@@ -1,0 +1,54 @@
+{
+	"frames": [
+		{
+			"filename": "red",
+			"frame": {
+				"x": 2,
+				"y": 2,
+				"w": 1080,
+				"h": 1920
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 1080,
+				"h": 1920
+			},
+			"sourceSize": {
+				"w": 1080,
+				"h": 1920
+			},
+			"pivot": {
+				"x": 0.5,
+				"y": 0.5
+			}
+		}, 
+    {
+			"filename": "yellow",
+			"frame": {
+				"x": 1086,
+				"y": 2,
+				"w": 1080,
+				"h": 1920
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 1080,
+				"h": 1920
+			},
+			"sourceSize": {
+				"w": 1080,
+				"h": 1920
+			},
+			"pivot": {
+				"x": 0.5,
+				"y": 0.5
+			}
+		}
+	]
+}

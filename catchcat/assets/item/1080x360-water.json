@@ -1,0 +1,79 @@
+{
+	"frames": [
+		{
+			"filename": "low",
+			"frame": {
+				"x": 2,
+				"y": 150,
+				"w": 1080,
+				"h": 208
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 1080,
+				"h": 208
+			},
+			"sourceSize": {
+				"w": 1080,
+				"h": 208
+			},
+			"pivot": {
+				"x": 0.5,
+				"y": 0.5
+			}
+		},
+    {
+			"filename": "middle",
+			"frame": {
+				"x": 1086,
+				"y": 76,
+				"w": 1080,
+				"h": 282
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 1080,
+				"h": 282
+			},
+			"sourceSize": {
+				"w": 1080,
+				"h": 282
+			},
+			"pivot": {
+				"x": 0.5,
+				"y": 0.5
+			}
+		},
+    {
+			"filename": "high",
+			"frame": {
+				"x": 2170,
+				"y": 2,
+				"w": 1080,
+				"h": 356
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 1080,
+				"h": 356
+			},
+			"sourceSize": {
+				"w": 1080,
+				"h": 356
+			},
+			"pivot": {
+				"x": 0.5,
+				"y": 0.5
+			}
+		}
+	]
+}
