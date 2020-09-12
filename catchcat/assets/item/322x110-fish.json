@@ -1,0 +1,104 @@
+{
+	"frames": [
+		{
+			"filename": "iceblock",
+			"frame": {
+				"x": 5,
+				"y": 6,
+				"w": 312,
+				"h": 100
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 312,
+				"h": 100
+			},
+			"sourceSize": {
+				"w": 312,
+				"h": 100
+			},
+			"pivot": {
+				"x": 0.5,
+				"y": 0.5
+			}
+		},
+    {
+			"filename": "pinkfish",
+			"frame": {
+				"x": 404,
+				"y": 5,
+				"w": 157,
+				"h": 102
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 157,
+				"h": 102
+			},
+			"sourceSize": {
+				"w": 157,
+				"h": 102
+			},
+			"pivot": {
+				"x": 0.5,
+				"y": 0.5
+			}
+		},
+    {
+			"filename": "bluefish",
+			"frame": {
+				"x": 718,
+				"y": 4,
+				"w": 173,
+				"h": 103
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 173,
+				"h": 103
+			},
+			"sourceSize": {
+				"w": 173,
+				"h": 103
+			},
+			"pivot": {
+				"x": 0.5,
+				"y": 0.5
+			}
+		},
+    {
+			"filename": "yellowfish",
+			"frame": {
+				"x": 1037,
+				"y": 4,
+				"w": 179,
+				"h": 103
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 179,
+				"h": 103
+			},
+			"sourceSize": {
+				"w": 179,
+				"h": 103
+			},
+			"pivot": {
+				"x": 0.5,
+				"y": 0.5
+			}
+		}
+	]
+}

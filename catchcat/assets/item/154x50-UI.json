@@ -1,0 +1,104 @@
+{
+	"frames": [
+		{
+			"filename": "fishicon",
+			"frame": {
+				"x": 2,
+				"y": 2,
+				"w": 154,
+				"h": 51
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 154,
+				"h": 51
+			},
+			"sourceSize": {
+				"w": 154,
+				"h": 51
+			},
+			"pivot": {
+				"x": 0.5,
+				"y": 0.5
+			}
+		},
+    {
+			"filename": "radio1",
+			"frame": {
+				"x": 212,
+				"y": 2,
+				"w": 50,
+				"h": 50
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 50,
+				"h": 50
+			},
+			"sourceSize": {
+				"w": 50,
+				"h": 50
+			},
+			"pivot": {
+				"x": 0.5,
+				"y": 0.5
+			}
+		},
+    {
+			"filename": "radio2",
+			"frame": {
+				"x": 370,
+				"y": 2,
+				"w": 50,
+				"h": 50
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 50,
+				"h": 50
+			},
+			"sourceSize": {
+				"w": 50,
+				"h": 50
+			},
+			"pivot": {
+				"x": 0.5,
+				"y": 0.5
+			}
+		},
+    {
+			"filename": "radio3",
+			"frame": {
+				"x": 528,
+				"y": 1,
+				"w": 50,
+				"h": 50
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 50,
+				"h": 50
+			},
+			"sourceSize": {
+				"w": 50,
+				"h": 50
+			},
+			"pivot": {
+				"x": 0.5,
+				"y": 0.5
+			}
+		}
+	]
+}

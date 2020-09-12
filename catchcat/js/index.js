@@ -82,6 +82,8 @@ class BackgroundScene extends Phaser.Scene
     seawave_middle;
     seawave_high;
 
+    cat;
+
     constructor ()
     {
         super('BackgroundScene');
@@ -134,6 +136,44 @@ class BackgroundScene extends Phaser.Scene
         this.load.atlas('shinyshell', 'assets/item/1080x1920-shine.png', 'assets/item/1080x1920-shine.json');
 
         this.load.atlas('seawave', 'assets/item/1080x360-water.png', 'assets/item/1080x360-water.json');
+        
+        this.load.atlas('newui', 'assets/item/154x50-UI.png', 'assets/item/154x50-UI.json');
+        
+        this.load.atlas('gameele', 'assets/item/322x110-fish.png', 'assets/item/322x110-fish.json');
+        
+        
+        // this.load.atlas('yellowcat', 'assets/item/300x308-cats-yellow.png', 'assets/item/300x308-cats.json');
+
+        this.load.spritesheet(
+          'bluecat',
+          'assets/item/300x308-cats-blue.png',
+          {frameWidth:300, frameHeight: 311, endFrame: 8}
+        );
+
+        // this.load.spritesheet(
+        //   'pinkcat',
+        //   'assets/item/300x308-cats-pink.png',
+        //   {frameWidth:300, frameHeight: 311, endFrame: 8}
+        // );
+
+        // this.load.spritesheet(
+        //   'bluecat',
+        //   'assets/item/300x308-cats-blue.png',
+        //   {frameWidth:300, frameHeight: 311, endFrame: 8}
+        // );
+
+        
+        this.load.spritesheet(
+            'nextcat',
+            'assets/item/200x200-minipoi.png',
+            {frameWidth:204, frameHeight: 205}
+        );
+
+        this.load.spritesheet(
+            'shark',
+            'assets/item/322x110-shark.png',
+            {frameWidth:322, frameHeight: 110}
+        );
     }
 
     create ()
@@ -165,14 +205,97 @@ class BackgroundScene extends Phaser.Scene
 
         this.uibg = this.add.image(0, 0, 'newbg', 'normal').setOrigin(0, 0).setScale(width / 1080, height / 1920);
 
-        this.seawave_high = this.add.image(width / 2, height - 10, 'seawave', 'high').setScale(width / 1080, 1);
-        this.seawave_middle = this.add.image(width / 2, height - 10, 'seawave', 'middle').setScale(width / 1080, 1);
-        this.seawave_low = this.add.image(width / 2, height - 10, 'seawave', 'low').setScale(width / 1080, 1);
+        
 
+        var dropWidth = width / 4;
+
+        for(var i = 0; i < 4; i++)
+        {
+            this.add.sprite(dropWidth * (i + 0.5), height - 110, 'gameele', 'iceblock').setScale(dropWidth / 312);
+        }
+
+        this.seawave_high = this.add.image(width / 2, height + 80, 'seawave', 'high').setScale(width / 900, 1);
+        this.seawave_middle = this.add.image(width / 2, height + 90, 'seawave', 'middle').setScale(width / 900, 1);
+        this.seawave_low = this.add.image(width / 2, height + 80, 'seawave', 'low').setScale(width / 900, 1);
+
+        // amination
+
+        this.tweens.add({
+            targets: [this.seawave_low, this.seawave_high],
+            duration: 4000,
+            x: '+=30',
+            y: '-=15',
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1
+        });
+
+        this.tweens.add({
+            targets: [this.seawave_middle],
+            duration: 5000,
+            x: '-=30',
+            y: '-=60',
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1
+        });
+        
+        this.anims.create(
+            {
+                key: 'cat_blue',
+                frames: this.anims.generateFrameNumbers('bluecat', { start: 0, end: 8 }),
+                frameRate: 8,
+                repeat: -1
+            }
+        );
+
+        this.anims.create(
+            {
+                key: 'shark_shine',
+                frames: this.anims.generateFrameNumbers('shark', { start: 0, end: 2 }),
+                frameRate: 5,
+                repeat: -1
+            }
+        );
+
+        // this.anims.create(
+        //     {
+        //         key: 'cat_pink',
+        //         frames: this.anims.generateFrameNumbers('pinkcat', { start: 0, end: 8 }),
+        //         frameRate: 8,
+        //         repeat: -1
+        //     }
+        // );
+
+        // this.anims.create(
+        //     {
+        //         key: 'cat_yellow',
+        //         frames: this.anims.generateFrameNumbers('yellowcat', { start: 0, end: 8 }),
+        //         frameRate: 8,
+        //         repeat: -1
+        //     }
+        // );
+
+        // sprite
+        this.cat = this.add.sprite(width/2, height - 185, 'bluecat').setScale(0.4);
+
+        this.cat.play('cat_blue');
+
+        const nextCat = this.add.sprite(width - 35, height - 200, 'nextcat').setScale(0.3);
 
         this.text = this.add.bitmapText(35, 10, 'nokia16').setScale(1.5).setScrollFactor(0);
         
         this.add.image(10, 10, 'icon').setOrigin(0, 0).setScale(2).setScrollFactor(0);;
+
+        const pinkfish = this.add.sprite(dropWidth * 1.5, 50, 'gameele', 'pinkfish').setScale(dropWidth / 250);
+
+        const bluefish = this.add.sprite(dropWidth * 2.5, 130, 'gameele', 'bluefish').setScale(dropWidth / 250);
+
+        const yellowfish = this.add.sprite(dropWidth * 3.5, 200, 'gameele', 'yellowfish').setScale(dropWidth / 250);
+
+        const shark = this.add.sprite(dropWidth * 0.5, 220, 'shark').setScale(dropWidth / 280);
+
+        shark.play('shark_shine');
 
         // data
         this.data.set({score: 0, bestScore: 0});
@@ -180,7 +303,7 @@ class BackgroundScene extends Phaser.Scene
         
         this.updateScore(0);
         
-        this.scene.launch('StartScene');
+        // this.scene.launch('StartScene');
 
         this.bgMusic = this.sound.add('bg', { loop: true });
 
