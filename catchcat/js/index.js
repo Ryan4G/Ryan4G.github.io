@@ -1,12 +1,41 @@
+class WaveScene extends Phaser.Scene{
+
+    constructor(){
+        super('WaveScene');
+    }
+
+    create(){
+        
+        const width = this.scale.gameSize.width;
+        const height = this.scale.gameSize.height;
+
+        const seawave_high = this.add.image(width / 2, height + 60, 'seawave', 'high').setScale(width / 800, 1);
+        const seawave_middle = this.add.image(width / 2, height + 50, 'seawave', 'middle').setScale(width / 800, 1);
+        const seawave_low = this.add.image(width / 2, height + 40, 'seawave', 'low').setScale(width / 800, 1);
+
+        // amination
+
+        this.tweens.add({
+            targets: [seawave_low, seawave_high, seawave_middle],
+            duration: 4000,
+            x: '+=30',
+            y: '-=15',
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1
+        });
+    }
+
+    BringToTopScene(){
+        this.scene.bringToTop();
+    }
+}
 
 // start scene
 class StartScene extends Phaser.Scene
 {
-    startButton;
-    startButton_Text;
-
-    startBall;
-    startBallArea;
+    // startButton;
+    // startButton_Text;
 
     constructor(){
         super('StartScene');
@@ -17,33 +46,49 @@ class StartScene extends Phaser.Scene
         const width = this.scale.gameSize.width;
         const height = this.scale.gameSize.height;
 
-        var x = width / 2 - 150;
-        var y = height / 2 + 50;
+        var x = width / 2;
+        var y = height / 2 - 120;
         var name = 'Start';
 
-        //this.add.image(x, y - 200,'logo').setOrigin(0, 0).setScale(1.5);
+        this.add.image(x, y,'logo-begin').setScale(width / 1100);
 
-        this.startButton = this.add.image(x + 150, y - 30, 'button', 0).setInteractive();
-        this.startButton.name = name;
-        this.startButton.setScale(2.5);
+        const startButton = this.add.sprite(x, y + 150, 'button-begin').setScale(width / 1100).setInteractive();
+
+        startButton.setFrame(0);
+
+        const exitButton = this.add.sprite(x, y + 210, 'button-begin').setScale(width / 1100).setInteractive();
+
+        exitButton.setFrame(2);
+
+        // this.startButton = this.add.image(x + 150, y - 30, 'button', 0).setInteractive();
+        // this.startButton.name = name;
+        // this.startButton.setScale(2.5);
     
-        this.startButton_Text = this.add.bitmapText(x + 125, y - 48, 'nokia16').setScale(2.2).setTint(0x0000ff);
-        this.startButton_Text.setText(name);
-        this.startButton_Text.x += (this.startButton.width - this.startButton_Text.width) / 2;
+        // this.startButton_Text = this.add.bitmapText(x + 125, y - 48, 'nokia16').setScale(2.2).setTint(0x0000ff);
+        // this.startButton_Text.setText(name);
+        // this.startButton_Text.x += (this.startButton.width - this.startButton_Text.width) / 2;
 
-        this.startBallArea = this.add.image(x + 150, y + 30, 'startarea').setScale(2.2);
-
-        this.startBall = this.add.image(x + 150, y + 30, 'ball').setScale(0.8);
-
-        this.startButton.on('pointerover', function(event){
-            this.startButton.alpha = 0.5;
+        startButton.on('pointerover', function(event){
+            startButton.setFrame(1);
         }, this);
 
-        this.startButton.on('pointerout', function(event){
-            this.startButton.alpha = 1;
+        startButton.on('pointerout', function(event){
+            startButton.setFrame(0);
         }, this);
 
-        this.startButton.once('pointerup', this.startGame, this);
+        startButton.once('pointerup', this.startGame, this);
+
+        exitButton.on('pointerover', function(event){
+            exitButton.setFrame(3);
+        }, this);
+
+        exitButton.on('pointerout', function(event){
+            exitButton.setFrame(2);
+        }, this);
+
+        // exitButton.once('pointerup', function(){
+        //     window.close();
+        // }, this);
 
         this.input.keyboard.on('keyup-SPACE', function (event) {
 
@@ -69,7 +114,7 @@ class BackgroundScene extends Phaser.Scene
     mapWidth = 40;
     mapHeight = 60;
     distance = 0;
-    //tiles = [ 7, 7, 7, 6, 6, 6, 0, 0, 0, 1, 1, 2, 3, 4, 5 ];
+    
     gameScene;
 
     scoreText;
@@ -77,12 +122,6 @@ class BackgroundScene extends Phaser.Scene
     bgMusic;
     gameOver = false;
 
-    uibg;
-    seawave_low;
-    seawave_middle;
-    seawave_high;
-
-    cat;
 
     constructor ()
     {
@@ -92,11 +131,11 @@ class BackgroundScene extends Phaser.Scene
     preload ()
     {
         // image
-        this.load.image('logo', 'assets/ui/Banner256.png');
-        this.load.image('button', 'assets/ui/Banner-2.png');
-        this.load.image('startarea', 'assets/ui/Banner-3.png');
+        // this.load.image('logo', 'assets/ui/Banner256.png');
+        // this.load.image('button', 'assets/ui/Banner-2.png');
+        // this.load.image('startarea', 'assets/ui/Banner-3.png');
  
-        this.load.image('block','assets/sprites/block-wall.png');
+        // this.load.image('block','assets/sprites/block-wall.png');
         this.load.image('icon', 'assets/ui/score-icon.png');
 		  this.load.spritesheet(
             'wall',
@@ -142,27 +181,12 @@ class BackgroundScene extends Phaser.Scene
         this.load.atlas('gameele', 'assets/item/322x110-fish.png', 'assets/item/322x110-fish.json');
         
         
-        // this.load.atlas('yellowcat', 'assets/item/300x308-cats-yellow.png', 'assets/item/300x308-cats.json');
-
         this.load.spritesheet(
-          'bluecat',
-          'assets/item/300x308-cats-blue.png',
-          {frameWidth:300, frameHeight: 311, endFrame: 8}
+          'cat',
+          'assets/item/304x312-mix.png',
+          {frameWidth:304, frameHeight: 312 }
         );
 
-        // this.load.spritesheet(
-        //   'pinkcat',
-        //   'assets/item/300x308-cats-pink.png',
-        //   {frameWidth:300, frameHeight: 311, endFrame: 8}
-        // );
-
-        // this.load.spritesheet(
-        //   'bluecat',
-        //   'assets/item/300x308-cats-blue.png',
-        //   {frameWidth:300, frameHeight: 311, endFrame: 8}
-        // );
-
-        
         this.load.spritesheet(
             'nextcat',
             'assets/item/200x200-minipoi.png',
@@ -174,136 +198,44 @@ class BackgroundScene extends Phaser.Scene
             'assets/item/322x110-shark.png',
             {frameWidth:322, frameHeight: 110}
         );
+
+        // logo
+        this.load.image('logo-begin', 'assets/item/ui/998x610-began.png');
+    
+        this.load.spritesheet(
+            'button-begin',
+            'assets/item/ui/430x152-button.png',
+            {frameWidth:434, frameHeight: 157}
+        );
+
     }
 
     create ()
     {
-        // var mapData = [];
-
-        // for (var y = 0; y < this.mapHeight; y++)
-        // {
-        //     var row = [];
-
-        //     for (var x = 0; x < this.mapWidth; x++)
-        //     {
-        //         //  Scatter the tiles so we get more mud and less stones
-        //         var tileIndex = Phaser.Math.RND.weightedPick(this.tiles);
-
-        //         row.push(tileIndex);
-        //     }
-
-        //     mapData.push(row);
-        // }
-
-        // this.map = this.make.tilemap({ data: mapData, tileWidth: 16, tileHeight: 16 });
-
-        // var tileset = this.map.addTilesetImage('tiles');
-        // var layer = this.map.createDynamicLayer(0, tileset, 0, 0);
-
         const width = this.scale.gameSize.width;
         const height = this.scale.gameSize.height;
 
-        this.uibg = this.add.image(0, 0, 'newbg', 'normal').setOrigin(0, 0).setScale(width / 1080, height / 1920);
+        const uibg = this.add.image(0, -1, 'newbg', 'normal').setOrigin(0, 0).setScale(width / 1050, height / 1900);
 
+        // this.tweens.add({
+        //     targets: [this.seawave_middle],
+        //     duration: 5000,
+        //     x: '-=30',
+        //     y: '-=60',
+        //     ease: 'Sine.easeInOut',
+        //     yoyo: true,
+        //     repeat: -1
+        // });
         
-
-        var dropWidth = width / 4;
-
-        for(var i = 0; i < 4; i++)
-        {
-            this.add.sprite(dropWidth * (i + 0.5), height - 110, 'gameele', 'iceblock').setScale(dropWidth / 312);
-        }
-
-        this.seawave_high = this.add.image(width / 2, height + 80, 'seawave', 'high').setScale(width / 900, 1);
-        this.seawave_middle = this.add.image(width / 2, height + 90, 'seawave', 'middle').setScale(width / 900, 1);
-        this.seawave_low = this.add.image(width / 2, height + 80, 'seawave', 'low').setScale(width / 900, 1);
-
-        // amination
-
-        this.tweens.add({
-            targets: [this.seawave_low, this.seawave_high],
-            duration: 4000,
-            x: '+=30',
-            y: '-=15',
-            ease: 'Sine.easeInOut',
-            yoyo: true,
-            repeat: -1
-        });
-
-        this.tweens.add({
-            targets: [this.seawave_middle],
-            duration: 5000,
-            x: '-=30',
-            y: '-=60',
-            ease: 'Sine.easeInOut',
-            yoyo: true,
-            repeat: -1
-        });
-        
-        this.anims.create(
-            {
-                key: 'cat_blue',
-                frames: this.anims.generateFrameNumbers('bluecat', { start: 0, end: 8 }),
-                frameRate: 8,
-                repeat: -1
-            }
-        );
-
-        this.anims.create(
-            {
-                key: 'shark_shine',
-                frames: this.anims.generateFrameNumbers('shark', { start: 0, end: 2 }),
-                frameRate: 5,
-                repeat: -1
-            }
-        );
-
-        // this.anims.create(
-        //     {
-        //         key: 'cat_pink',
-        //         frames: this.anims.generateFrameNumbers('pinkcat', { start: 0, end: 8 }),
-        //         frameRate: 8,
-        //         repeat: -1
-        //     }
-        // );
-
-        // this.anims.create(
-        //     {
-        //         key: 'cat_yellow',
-        //         frames: this.anims.generateFrameNumbers('yellowcat', { start: 0, end: 8 }),
-        //         frameRate: 8,
-        //         repeat: -1
-        //     }
-        // );
-
-        // sprite
-        this.cat = this.add.sprite(width/2, height - 185, 'bluecat').setScale(0.4);
-
-        this.cat.play('cat_blue');
-
-        const nextCat = this.add.sprite(width - 35, height - 200, 'nextcat').setScale(0.3);
-
-        this.text = this.add.bitmapText(35, 10, 'nokia16').setScale(1.5).setScrollFactor(0);
-        
-        this.add.image(10, 10, 'icon').setOrigin(0, 0).setScale(2).setScrollFactor(0);;
-
-        const pinkfish = this.add.sprite(dropWidth * 1.5, 50, 'gameele', 'pinkfish').setScale(dropWidth / 250);
-
-        const bluefish = this.add.sprite(dropWidth * 2.5, 130, 'gameele', 'bluefish').setScale(dropWidth / 250);
-
-        const yellowfish = this.add.sprite(dropWidth * 3.5, 200, 'gameele', 'yellowfish').setScale(dropWidth / 250);
-
-        const shark = this.add.sprite(dropWidth * 0.5, 220, 'shark').setScale(dropWidth / 280);
-
-        shark.play('shark_shine');
-
         // data
         this.data.set({score: 0, bestScore: 0});
 
         
         this.updateScore(0);
         
-        // this.scene.launch('StartScene');
+        this.scene.launch('WaveScene');
+
+        this.scene.launch('StartScene');
 
         this.bgMusic = this.sound.add('bg', { loop: true });
 
@@ -357,28 +289,28 @@ class BackgroundScene extends Phaser.Scene
 
     updateScore(inc)
     {
-        var score = this.data.get('score'); 
+        // var score = this.data.get('score'); 
         
-        if (!score){
-            score = 0;
-        }
+        // if (!score){
+        //     score = 0;
+        // }
 
-        score += inc;
+        // score += inc;
 
-        this.scoreText = (Array(this.SCORE_NUM).join(0) + score).slice(-this.SCORE_NUM);
-        this.text.setText(this.scoreText);
+        // this.scoreText = (Array(this.SCORE_NUM).join(0) + score).slice(-this.SCORE_NUM);
+        // this.text.setText(this.scoreText);
         
-        this.data.set('score', score);
+        // this.data.set('score', score);
 
-        var bestScore = this.data.get('bestScore');
+        // var bestScore = this.data.get('bestScore');
 
-        if (!bestScore){
-            bestScore = 0;
-        }
+        // if (!bestScore){
+        //     bestScore = 0;
+        // }
 
-        bestScore = Math.max(score, bestScore);
+        // bestScore = Math.max(score, bestScore);
 
-        this.data.set('bestScore', bestScore);
+        // this.data.set('bestScore', bestScore);
     }
 
     initScore(){
@@ -473,6 +405,12 @@ class GameScene extends Phaser.Scene
 
     currentLevel = 0;
 
+    //
+    
+    cat;
+    fishGroup;
+    shark;
+
     constructor ()
     {
         super('GameScene');
@@ -509,8 +447,102 @@ class GameScene extends Phaser.Scene
         //  -----------------------------------
         //  -----------------------------------
 
-        this.pauseIcon = this.add.image(width - 20, 20, 'pause').setInteractive();
-        this.pauseIcon.on('pointerdown', this.pauseGame, this);
+        // ui
+
+        const fishicon = this.add.image(30, 20,'newui','fishicon').setScale(0.25);
+
+
+        // block
+        const iceblock = this.physics.add.staticGroup();
+        
+        var dropWidth = width / 4;
+
+        for(var i = 0; i < 4; i++)
+        {
+            iceblock.create(dropWidth * (i + 0.5), height - 130, 'gameele', 'iceblock').setScale(dropWidth / 312).refreshBody();
+        }
+        
+        // sprite
+        
+        this.anims.create(
+            {
+                key: 'shark_shine',
+                frames: this.anims.generateFrameNumbers('shark', { start: 0, end: 2 }),
+                frameRate: 5,
+                repeat: -1
+            }
+        );
+
+        this.anims.create(
+            {
+                key: 'cat_blue',
+                frames: this.anims.generateFrameNumbers('cat', { start: 0, end: 8 }),
+                frameRate: 8,
+                repeat: -1
+            }
+        );
+
+        this.anims.create(
+            {
+                key: 'cat_yellow',
+                frames: this.anims.generateFrameNumbers('cat', { start: 9, end: 17 }),
+                frameRate: 8,
+                repeat: -1
+            }
+        );
+
+        this.anims.create(
+            {
+                key: 'cat_pink',
+                frames: this.anims.generateFrameNumbers('cat', { start: 18, end: 26 }),
+                frameRate: 8,
+                repeat: -1
+            }
+        );
+
+        this.cat = this.physics.add.sprite(width/2, height - 205, 'cat').setScale(0.25);
+        this.cat.setBounce(0.8);
+        this.cat.setCollideWorldBounds(true);
+
+        this.cat.play('cat_blue');
+
+        const nextCat = this.add.sprite(width - 30, height - 200, 'nextcat').setScale(0.25);
+
+        // this.text = this.add.bitmapText(35, 10, 'nokia16').setScale(1.5).setScrollFactor(0);
+        
+        // this.add.image(10, 10, 'icon').setOrigin(0, 0).setScale(2).setScrollFactor(0);;
+
+        // fish 
+
+        this.fishGroup = this.physics.add.group({            
+            defaultKey: 'gameele',
+            maxSize: 10,
+            createCallback: function (fish) {
+                fish.setName('fish' + this.getLength());
+                fish.body.setAllowGravity(false);
+                console.log('Created', fish.name);
+            },
+            removeCallback: function (fish) {
+                console.log('Removed', fish.name);
+            }
+        });
+
+
+        // const pinkfish = this.add.sprite(dropWidth * 1.5, 50, 'gameele', 'pinkfish').setScale(dropWidth / 250);
+
+        // const bluefish = this.add.sprite(dropWidth * 2.5, 130, 'gameele', 'bluefish').setScale(dropWidth / 250);
+
+        // const yellowfish = this.add.sprite(dropWidth * 3.5, 200, 'gameele', 'yellowfish').setScale(dropWidth / 250);
+
+        // const shark = this.add.sprite(dropWidth * 0.5, 220, 'shark').setScale(dropWidth / 280);
+
+        // shark.play('shark_shine');
+
+        this.physics.add.collider(this.cat, iceblock);
+        this.physics.add.overlap(this.cat, this.fishGroup, this.throughWall, null, this);
+
+        // this.pauseIcon = this.add.image(width - 20, 20, 'pause').setInteractive();
+        // this.pauseIcon.on('pointerdown', this.pauseGame, this);
 
 
         //  Input Events
@@ -519,77 +551,77 @@ class GameScene extends Phaser.Scene
 
         //this.input.mouse.disableContextMenu();
 
-        this.ball = this.physics.add.sprite(width / 2, height / 2 + 80, 'ball').setScale(0.8);
-        this.ball.setBounce(0.8);
-        this.ball.setCollideWorldBounds(true);
+        // this.ball = this.physics.add.sprite(width / 2, height / 2 + 80, 'ball').setScale(0.8);
+        // this.ball.setBounce(0.8);
+        // this.ball.setCollideWorldBounds(true);
         
-        this.rainbowBall= this.add.sprite(20, 50, 'ball').setScale(0.44);
+        // this.rainbowBall= this.add.sprite(20, 50, 'ball').setScale(0.44);
         
-        this.rainbowCDText = this.add.bitmapText(35, 40, 'nokia16').setScale(1.5);
+        // this.rainbowCDText = this.add.bitmapText(35, 40, 'nokia16').setScale(1.5);
         
         // animate
-        this.anims.create({
-            key: 'bling',
-            frames: this.anims.generateFrameNumbers('ball', {start: 0, end: 2}),
-            frameRate: 10,
-            repeat: -1
-        });
+        // this.anims.create({
+        //     key: 'bling',
+        //     frames: this.anims.generateFrameNumbers('ball', {start: 0, end: 2}),
+        //     frameRate: 10,
+        //     repeat: -1
+        // });
         
-        this.blocks = this.physics.add.staticGroup();
+        // this.blocks = this.physics.add.staticGroup();
         
-        var wallWidth = width / 4;
-        for(var i = 0; i < 4; i++){
-            for(var j = 0; j < 4; j++){
-                this.blocks.create(i * wallWidth, height - (j + 1) * 24, 'block').setOrigin(0, 0).setScale(wallWidth / 128, 1).refreshBody();
-            }
-        }
+        // var wallWidth = width / 4;
+        // for(var i = 0; i < 4; i++){
+        //     for(var j = 0; j < 4; j++){
+        //         this.blocks.create(i * wallWidth, height - (j + 1) * 24, 'block').setOrigin(0, 0).setScale(wallWidth / 128, 1).refreshBody();
+        //     }
+        // }
 
-        this.walls = this.physics.add.group({
-            defaultKey: 'wall',
-            maxSize: 20,
-            createCallback: function (wall) {
-                wall.setName('wall' + this.getLength());
-                wall.body.setAllowGravity(false);
-                console.log('Created', wall.name);
-            },
-            removeCallback: function (wall) {
-                console.log('Removed', wall.name);
-            }
-        });
+        // this.walls = this.physics.add.group({
+        //     defaultKey: 'wall',
+        //     maxSize: 20,
+        //     createCallback: function (wall) {
+        //         wall.setName('wall' + this.getLength());
+        //         wall.body.setAllowGravity(false);
+        //         console.log('Created', wall.name);
+        //     },
+        //     removeCallback: function (wall) {
+        //         console.log('Removed', wall.name);
+        //     }
+        // });
 
-        this.physics.add.collider(this.ball, this.blocks);
+        // this.physics.add.collider(this.ball, this.blocks);
 
-        this.physics.add.overlap(this.ball, this.walls, this.throughWall, null, this);
-        this.physics.add.collider(this.walls, this.blocks, this.crashBlock, null, this);
+        // this.physics.add.overlap(this.ball, this.walls, this.throughWall, null, this);
+        // this.physics.add.collider(this.walls, this.blocks, this.crashBlock, null, this);
         
         this.timedEvent = this.time.addEvent({ delay: this.TIME_SPEED, callback: this.onEvent, callbackScope: this, loop: true });
         
-        this.ballPassMusic = this.sound.add('knock_wall');
-        this.ballRainbowMusic = this.sound.add('ball_rainbow');
-        this.blockCrashMusic = this.sound.add('block_crash');
+        // this.ballPassMusic = this.sound.add('knock_wall');
+        // this.ballRainbowMusic = this.sound.add('ball_rainbow');
+        // this.blockCrashMusic = this.sound.add('block_crash');
 
         this.debugText = this.add.text(10, 80, '', {fontSize: '16px', fill: '#000'});
             
         this.wallFlySpeed = Phaser.Math.GetSpeed(600, 3);
 
-        this.changeColor = this.add.sprite(width - 30, height - 200, 'ball').setScale(1).setInteractive();
-        this.changeColor.alpha = 0.9;
-        this.changeColor.on('pointerdown', this.changeBallColor, this);
+        // this.changeColor = this.add.sprite(width - 30, height - 200, 'ball').setScale(1).setInteractive();
+        // this.changeColor.alpha = 0.9;
+        // this.changeColor.on('pointerdown', this.changeBallColor, this);
 
-        var graphics = this.add.graphics({ lineStyle: { width: 1, color: 0xffffff } });
-        graphics.clear();
+        // var graphics = this.add.graphics({ lineStyle: { width: 1, color: 0xffffff } });
+        // graphics.clear();
 
-        this.nextColor = this.add.sprite(width - 30, height - 150, 'ball').setScale(0.65);
-        this.nextColor.alpha = 0.9;
-        this.nextColor.setFrame(1);
+        // this.nextColor = this.add.sprite(width - 30, height - 150, 'ball').setScale(0.65);
+        // this.nextColor.alpha = 0.9;
+        // this.nextColor.setFrame(1);
         
-        var nextRect = new Phaser.Geom.Rectangle();
-        var nexrRectWidth = 35;
-        nextRect.x = this.nextColor.x - nexrRectWidth / 2;
-        nextRect.y = this.nextColor.y - nexrRectWidth / 2;
-        nextRect.width = nextRect.height = nexrRectWidth;
+        // var nextRect = new Phaser.Geom.Rectangle();
+        // var nexrRectWidth = 35;
+        // nextRect.x = this.nextColor.x - nexrRectWidth / 2;
+        // nextRect.y = this.nextColor.y - nexrRectWidth / 2;
+        // nextRect.width = nextRect.height = nexrRectWidth;
 
-        graphics.strokeRectShape(nextRect)
+        // graphics.strokeRectShape(nextRect)
 
         this.input.keyboard.on('keyup-SPACE', function (event) {
 
@@ -597,11 +629,14 @@ class GameScene extends Phaser.Scene
     
         },this);
 
-        this.input.on('pointerup', function (pointer) {
+        // this.input.on('pointerup', function (pointer) {
 
-            this.changeColorCD = false;
+        //     this.changeColorCD = false;
     
-        }, this);
+        // }, this);
+
+        const waveScene = this.scene.get('WaveScene');
+        waveScene.BringToTopScene();
     }
     
     //  ------------------------
@@ -653,29 +688,29 @@ class GameScene extends Phaser.Scene
             ]);
         }
 
-        if (this.ballGotRainbow){
-            var rainbowText = (Array(2).join(0) + (this.RAINBOW_DURING_TIMES - this.rainbowBlingTime)).slice(-2);
-            this.rainbowCDText.setText(rainbowText);
-        }
-        else{
-            this.rainbowCDText.visible = false;
-            this.rainbowBall.visible = false;
-            this.rainbowBall.anims.stop();
-        }
+        // if (this.ballGotRainbow){
+        //     var rainbowText = (Array(2).join(0) + (this.RAINBOW_DURING_TIMES - this.rainbowBlingTime)).slice(-2);
+        //     this.rainbowCDText.setText(rainbowText);
+        // }
+        // else{
+        //     this.rainbowCDText.visible = false;
+        //     this.rainbowBall.visible = false;
+        //     this.rainbowBall.anims.stop();
+        // }
 
-        Phaser.Actions.IncY(this.walls.getChildren(), delta * this.wallFlySpeed);
+        Phaser.Actions.IncY(this.fishGroup.getChildren(), delta * this.wallFlySpeed);
 
-        this.walls.children.iterate(function (wall) {
+        this.fishGroup.children.iterate(function (wall) {
             if (wall.y > that.parent.height) {
-                that.walls.killAndHide(wall);
+                that.fishGroup.killAndHide(wall);
             }
         });
 
         var p = this.input.activePointer;
 
         var deltaX = 0;
-        var rollSpeed = this.ballGotRainbow ? this.BALL_MOVE_SPPED + 50 : this.BALL_MOVE_SPPED;
-        var rollAngle = this.ballGotRainbow ? this.BALL_ROTATE_ANGLE + 3 : this.BALL_ROTATE_ANGLE;
+        var rollSpeed = this.BALL_MOVE_SPPED;
+        // var rollAngle = this.ballGotRainbow ? this.BALL_ROTATE_ANGLE + 3 : this.BALL_ROTATE_ANGLE;
 
         if (p.isDown && p.getDuration() > 100)
         {
@@ -684,21 +719,19 @@ class GameScene extends Phaser.Scene
 
         if (deltaX < 0 || this.cursors.left.isDown)
         {
-            this.ball.setVelocityX(-rollSpeed);
-            this.ball.angle -= rollAngle;
+            this.cat.setVelocityX(-rollSpeed);
         }
         else if (deltaX > 0 || this.cursors.right.isDown)
         {
-            this.ball.setVelocityX(rollSpeed);
-            this.ball.angle += rollAngle;
+            this.cat.setVelocityX(rollSpeed);
         }
         else{
-            this.ball.setVelocityX(0);
+            this.cat.setVelocityX(0);
         }
 
-        if ((p.isDown || this.cursors.up.isDown) && this.ball.body.blocked.down){
+        if ((p.isDown || this.cursors.up.isDown) && this.cat.body.blocked.down){
 
-            this.ball.setVelocityY(-this.BALL_BOUNCE_HEIGHT);
+            this.cat.setVelocityY(-this.BALL_BOUNCE_HEIGHT);
         }
 
         // two pointer is down state to change color
@@ -713,9 +746,9 @@ class GameScene extends Phaser.Scene
                 this.changeBallColor(null);
         }
 
-        if (this.parent.height - this.ball.y < 24){
-            this.endGame();
-        }
+        // if (this.parent.height - this.ball.y < 24){
+        //     this.endGame();
+        // }
     }
 
     // timer event
@@ -725,67 +758,66 @@ class GameScene extends Phaser.Scene
         var randomColor = Phaser.Math.Between(0, 2);
 
         var wallWidth = this.parent.width / 4;
-        var wall = this.walls.get(randomPart * wallWidth, 0);
+        var wall = this.fishGroup.get((randomPart + 0.5) * wallWidth, 0);
 
         if (!wall){
             return;
         }
 
-        if (this.ballGotRainbow){
-            if (this.rainbowBlingTime < this.RAINBOW_DURING_TIMES){
-                this.rainbowBlingTime++;
-            }
-            else{
-                this.ballGotRainbow = false;
+        // if (this.ballGotRainbow){
+        //     if (this.rainbowBlingTime < this.RAINBOW_DURING_TIMES){
+        //         this.rainbowBlingTime++;
+        //     }
+        //     else{
+        //         this.ballGotRainbow = false;
 
-                this.ball.anims.stop(); 
+        //         this.ball.anims.stop(); 
                 
-                var ballColor = this.data.get('color');
-                this.ball.setFrame(ballColor);
-            }
-        }
+        //         var ballColor = this.data.get('color');
+        //         this.ball.setFrame(ballColor);
+        //     }
+        // }
         
-        if (!this.rainbowExist && !this.ballGotRainbow){
-            this.rainbowCounterDown--;            
-        }
+        // if (!this.rainbowExist && !this.ballGotRainbow){
+        //     this.rainbowCounterDown--;            
+        // }
 
-        if (wall.isTinted){
-            wall.clearTint();
-        }
+        // if (wall.isTinted){
+        //     wall.clearTint();
+        // }
 
-        wall.setOrigin(0, 0).setScale(wallWidth / 113, wallWidth / 160);
+        wall.setScale(0.3);
 
-        // show the rainbow
-        if (this.rainbowCounterDown <= 0)
-        {
-            this.rainbowCounterDown = Phaser.Math.Between(20, 30);
+        // // show the rainbow
+        // if (this.rainbowCounterDown <= 0)
+        // {
+        //     this.rainbowCounterDown = Phaser.Math.Between(20, 30);
 
-            this.rainbowExist = true;
+        //     this.rainbowExist = true;
 
-            wall.setFrame(3);
+        //     wall.setFrame(3);
             
-            wall.setData('color', 4);
-            wall.setActive(true).setVisible(true);
-            wall.body.setAllowGravity(false);
-        }
-        else
-        {
-            wall.setFrame(0);
+        //     wall.setData('color', 4);
+        //     wall.setActive(true).setVisible(true);
+        //     wall.body.setAllowGravity(false);
+        // }
+        // else
+        // {
 
             if (randomColor === 1){
-                wall.setFrame(1);
+                wall.setFrame('yellowfish');
             }
             else if (randomColor === 2){
-                wall.setFrame(2);
+                wall.setFrame('pinkfish');
             }
             else{
-                wall.setFrame(0);
+                wall.setFrame('bluefish');
             }
 
             wall.setData('color', randomColor);
             wall.setActive(true).setVisible(true);
             wall.body.setAllowGravity(false);
-        }
+        // }
     }
 
     throughWall(ball, wall){
@@ -799,61 +831,61 @@ class GameScene extends Phaser.Scene
                     this.rainbowExist = false;
                     this.rainbowBlingTime = 0;
                     
-                    this.ball.anims.play('bling', true);
-                    this.rainbowBall.anims.play('bling', true);
+                    // this.ball.anims.play('bling', true);
+                    // this.rainbowBall.anims.play('bling', true);
 
                     this.rainbowCDText.visible = true;
                     this.rainbowBall.visible = true;
                 }
 				else{
-                    this.ballPassMusic.play( {volume: 0.8} );
+                    // this.ballPassMusic.play( {volume: 0.8} );
                 }
 
                 this.backgroundScene.updateScore(10);
 
         
-                this.walls.killAndHide(wall);
+                this.fishGroup.killAndHide(wall);
 
                 // Every 100 points add 1 row block
 
                 var currScore = this.backgroundScene.getScore();
 
-                if (currScore % this.ADDBLOCK_SCORE == 0){
+                // if (currScore % this.ADDBLOCK_SCORE == 0){
                     
-                    this.blocks.children.iterate(function(block){
-                        if (block.active && block.visible){
-                            block.y -= block.height;
-                            block.refreshBody();
-                        }
-                    });
+                //     this.blocks.children.iterate(function(block){
+                //         if (block.active && block.visible){
+                //             block.y -= block.height;
+                //             block.refreshBody();
+                //         }
+                //     });
 
-                    var wallWidth = this.parent.width / 4;
-                    var height = this.parent.height;
-                    for(var i = 0; i < 4; i++){
-                        this.blocks.create(i * wallWidth, height - 24, 'block').setOrigin(0, 0).setScale(wallWidth / 128, 1).refreshBody();
-                    }
+                //     var wallWidth = this.parent.width / 4;
+                //     var height = this.parent.height;
+                //     for(var i = 0; i < 4; i++){
+                //         this.blocks.create(i * wallWidth, height - 24, 'block').setOrigin(0, 0).setScale(wallWidth / 128, 1).refreshBody();
+                //     }
 
-                    if (ball.body.blocked.down || ball.body.embedded){
-                        ball.y -= 24;
-                    }
+                //     if (ball.body.blocked.down || ball.body.embedded){
+                //         ball.y -= 24;
+                //     }
 
-                }
+                // }
 
-                if (this.currentLevel === 0 && currScore >= this.TIME_REDUCE_SCORE)
-                {
-                    this.backgroundScene.bgMusic.setRate(this.HIGHSCORE_RATE);
+                // if (this.currentLevel === 0 && currScore >= this.TIME_REDUCE_SCORE)
+                // {
+                //     this.backgroundScene.bgMusic.setRate(this.HIGHSCORE_RATE);
 
-                    this.currentLevel = 1;
+                //     this.currentLevel = 1;
 
-                    this.wallFlySpeed = Phaser.Math.GetSpeed(600, 2.3);
+                //     this.wallFlySpeed = Phaser.Math.GetSpeed(600, 2.3);
 
-                    this.timedEvent.remove(false);
+                //     this.timedEvent.remove(false);
         
-                    this.timedEvent = this.time.addEvent({ delay: this.TIME_SPEED - this.TIME_REDUCE_SPAN, callback: this.onEvent, callbackScope: this, loop: true });
-                }
+                //     this.timedEvent = this.time.addEvent({ delay: this.TIME_SPEED - this.TIME_REDUCE_SPAN, callback: this.onEvent, callbackScope: this, loop: true });
+                // }
             }
             else{
-                this.endGame();
+                // this.endGame();
             }
         }
     }
@@ -872,9 +904,19 @@ class GameScene extends Phaser.Scene
 
         this.data.set('color', ballColor);
         
-        this.changeColor.setFrame(ballColor);
-        this.ball.setFrame(ballColor);
-        this.nextColor.setFrame(nextColor);
+        if (ballColor == 0){
+            this.cat.play('cat_blue');
+        }
+        else if (ballColor == 1){
+
+            this.cat.play('cat_yellow');
+        }
+        else {
+            this.cat.play('cat_pink');
+        }
+        // this.changeColor.setFrame(ballColor);
+        // this.ball.setFrame(ballColor);
+        // this.nextColor.setFrame(nextColor);
     }
 
     crashBlock(wall, block){
@@ -1066,11 +1108,11 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 300 },
+            gravity: { y: 850 },
             debug: false
         }
     },
-    scene: [ BackgroundScene, StartScene, GameScene, RestartScene, PauseScene ]
+    scene: [ BackgroundScene, WaveScene, StartScene, GameScene, RestartScene, PauseScene ]
 };
 
 const game = new Phaser.Game(config);
