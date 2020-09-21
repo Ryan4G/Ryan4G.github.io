@@ -1,5 +1,7 @@
 class WaveScene extends Phaser.Scene{
 
+    shinyShell;
+
     constructor(){
         super('WaveScene');
     }
@@ -9,9 +11,12 @@ class WaveScene extends Phaser.Scene{
         const width = this.scale.gameSize.width;
         const height = this.scale.gameSize.height;
 
-        const seawave_high = this.add.image(width / 2, height + 60, 'seawave', 'high').setScale(width / 800, 1);
-        const seawave_middle = this.add.image(width / 2, height + 50, 'seawave', 'middle').setScale(width / 800, 1);
-        const seawave_low = this.add.image(width / 2, height + 40, 'seawave', 'low').setScale(width / 800, 1);
+        const seawave_high = this.add.image(width / 2, height + 90, 'seawave', 'high').setScale(width / 800, 1);
+        const seawave_middle = this.add.image(width / 2, height + 80, 'seawave', 'middle').setScale(width / 800, 1);
+        const seawave_low = this.add.image(width / 2, height + 70, 'seawave', 'low').setScale(width / 800, 1);
+
+        this.shinyShell = this.add.sprite(-1, -1, 'shinyshell').setOrigin(0, 0).setScale(width / 1075, height / 1920);
+        this.shinyShell.setVisible(false);
 
         // amination
 
@@ -24,10 +29,29 @@ class WaveScene extends Phaser.Scene{
             yoyo: true,
             repeat: -1
         });
+        
+        this.anims.create({
+            key: 'shell_shiny',
+            frames: this.anims.generateFrameNumbers('shinyshell', { start: 0, end: 1 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
     }
 
     BringToTopScene(){
         this.scene.bringToTop();
+    }
+
+    changeShellShiny(enable){
+        if (enable){
+            this.shinyShell.anims.play('shell_shiny');
+            this.shinyShell.setVisible(true);
+        }
+        else{            
+            this.shinyShell.anims.stop();
+            this.shinyShell.setVisible(false);
+        }
     }
 }
 
@@ -123,6 +147,9 @@ class BackgroundScene extends Phaser.Scene
     gameOver = false;
 
 
+    bgCover;
+    bgFrame;
+
     constructor ()
     {
         super('BackgroundScene');
@@ -130,38 +157,12 @@ class BackgroundScene extends Phaser.Scene
 
     preload ()
     {
-        // image
-        // this.load.image('logo', 'assets/ui/Banner256.png');
-        // this.load.image('button', 'assets/ui/Banner-2.png');
-        // this.load.image('startarea', 'assets/ui/Banner-3.png');
- 
-        // this.load.image('block','assets/sprites/block-wall.png');
-        this.load.image('icon', 'assets/ui/score-icon.png');
-		  this.load.spritesheet(
-            'wall',
-            'assets/sprites/wall-all.png',
-            {frameWidth:113, frameHeight:66}
-        );
         
-        
-        this.load.image('pause', 'assets/ui/pause-icon.png');
-
         this.load.image('end-logo', 'assets/ui/ending.png');
         this.load.image('end-best', 'assets/ui/ending2.png');
         this.load.image('end-line', 'assets/ui/ending3.png');
         this.load.image('end-score', 'assets/ui/ending4.png');
 
-        // sprite
-        this.load.spritesheet(
-            'ball',
-            'assets/sprites/ball_new.png',
-            {frameWidth:50, frameHeight:50}
-        );
-
-        // Font
-        this.load.bitmapFont('nokia16', 'assets/fonts/bitmap/nokia16.png', 'assets/fonts/bitmap/nokia16.xml');
-        this.load.bitmapFont('nokia', 'assets/fonts/bitmap/nokia16black.png', 'assets/fonts/bitmap/nokia16black.xml');
-    
         // Music
         this.load.audio('bg', 'assets/sounds/bg-happy.mp3');
         this.load.audio('block_crash', 'assets/sounds/block_crash.mp3');
@@ -170,17 +171,36 @@ class BackgroundScene extends Phaser.Scene
         
 
         // atlas
-        this.load.atlas('newbg', 'assets/item/1080x1920-background.png', 'assets/item/1080x1920-background.json');
+        // this.load.atlas('newbg', 'assets/item/1080x1920-background.png', 'assets/item/1080x1920-background.json');
 
-        this.load.atlas('shinyshell', 'assets/item/1080x1920-shine.png', 'assets/item/1080x1920-shine.json');
+        // this.load.atlas('shinyshell', 'assets/item/1080x1920-shine.png', 'assets/item/1080x1920-shine.json');
 
         this.load.atlas('seawave', 'assets/item/1080x360-water.png', 'assets/item/1080x360-water.json');
         
         this.load.atlas('newui', 'assets/item/154x50-UI.png', 'assets/item/154x50-UI.json');
         
-        this.load.atlas('gameele', 'assets/item/322x110-fish.png', 'assets/item/322x110-fish.json');
+        //this.load.atlas('gameele', 'assets/item/322x110-fish.png', 'assets/item/322x110-fish.json');
         
+        this.load.image('iceblock', 'assets/item/322x110-iceblock.png');
         
+        this.load.spritesheet(
+            'shinyshell',
+            'assets/item/1080x1920-shine.png',
+            {frameWidth:1084, frameHeight: 1925 }
+          );
+
+        this.load.spritesheet(
+            'newbg',
+            'assets/item/1080x1920-background.png',
+            {frameWidth:1084, frameHeight: 1925 }
+          );
+
+        this.load.spritesheet(
+            'fish',
+            'assets/item/182x110-fish.png',
+            {frameWidth:182, frameHeight: 110 }
+          );
+
         this.load.spritesheet(
           'cat',
           'assets/item/304x312-mix.png',
@@ -215,7 +235,8 @@ class BackgroundScene extends Phaser.Scene
         const width = this.scale.gameSize.width;
         const height = this.scale.gameSize.height;
 
-        const uibg = this.add.image(0, -1, 'newbg', 'normal').setOrigin(0, 0).setScale(width / 1050, height / 1900);
+        this.bgCover = this.add.sprite(-2, -2, 'newbg').setOrigin(0, 0).setScale(width / 1050, height / 1900);
+        this.bgFrame = 0;
 
         // this.tweens.add({
         //     targets: [this.seawave_middle],
@@ -229,7 +250,6 @@ class BackgroundScene extends Phaser.Scene
         
         // data
         this.data.set({score: 0, bestScore: 0});
-
         
         this.updateScore(0);
         
@@ -247,37 +267,6 @@ class BackgroundScene extends Phaser.Scene
         if (this.gameOver){
             return;
         }
-
-        //  Any speed as long as 16 evenly divides by it
-        // this.sx -= this.SPEED;
-        
-        // if (this.sx === -16)
-        // {
-        //     //  Reset and create new strip
-
-        //     var tile;
-        //     var prev;
-
-        //     for (var y = this.mapHeight - 2; y >= 0; y--)
-        //     {
-        //         for (var x = 0; x < this.mapWidth; x++)
-        //         {
-        //             tile = this.map.getTileAt(x, y);
-        //             prev = this.map.getTileAt(x, y + 1);
-
-        //             prev.index = tile.index;
-
-        //             if (y === 0)
-        //             {
-        //                 tile.index = Phaser.Math.RND.weightedPick(this.tiles);
-        //             }
-        //         }
-        //     }
-
-        //     this.sx = 0;
-        // }
-
-        // this.updateScrollY(this.sx + 16);
     }
 
     updateScrollY(y){
@@ -289,28 +278,7 @@ class BackgroundScene extends Phaser.Scene
 
     updateScore(inc)
     {
-        // var score = this.data.get('score'); 
-        
-        // if (!score){
-        //     score = 0;
-        // }
 
-        // score += inc;
-
-        // this.scoreText = (Array(this.SCORE_NUM).join(0) + score).slice(-this.SCORE_NUM);
-        // this.text.setText(this.scoreText);
-        
-        // this.data.set('score', score);
-
-        // var bestScore = this.data.get('bestScore');
-
-        // if (!bestScore){
-        //     bestScore = 0;
-        // }
-
-        // bestScore = Math.max(score, bestScore);
-
-        // this.data.set('bestScore', bestScore);
     }
 
     initScore(){
@@ -347,12 +315,30 @@ class BackgroundScene extends Phaser.Scene
 
         return bestScore;
     }
+
+    changeBackground(){
+
+        const waveScene = this.scene.get('WaveScene');
+
+        if (this.bgFrame == 0){
+            this.bgFrame = 1;
+            waveScene.changeShellShiny(true);
+        }
+        else{
+            this.bgFrame = 0;
+            waveScene.changeShellShiny(false);
+        }
+        
+        this.bgCover.setFrame(this.bgFrame);
+    }
 }
 
 
 //  This Scene is aspect ratio locked at 640 x 960 (and scaled and centered accordingly)
 class GameScene extends Phaser.Scene
 {
+    RAINBOW_INTERVAL = 15000;
+
     ADDBLOCK_SCORE = 50;
     GAME_WIDTH = 640;
     GAME_HEIGHT = 960;
@@ -360,7 +346,7 @@ class GameScene extends Phaser.Scene
 
     BALL_MOVE_SPPED = 200;
     BALL_ROTATE_ANGLE = 15;
-    BALL_BOUNCE_HEIGHT = 270;
+    BALL_BOUNCE_HEIGHT = 120;
 
     TIME_REDUCE_SPAN = 350;
     TIME_REDUCE_SCORE = 500;
@@ -410,6 +396,12 @@ class GameScene extends Phaser.Scene
     cat;
     fishGroup;
     shark;
+    nextCat;
+
+    randomPart;
+
+    rainbowTimeEvent;
+    secondsTimeEvent;
 
     constructor ()
     {
@@ -449,7 +441,7 @@ class GameScene extends Phaser.Scene
 
         // ui
 
-        const fishicon = this.add.image(30, 20,'newui','fishicon').setScale(0.25);
+        const fishicon = this.add.image(30, 15,'newui','fishicon').setScale(0.25);
 
 
         // block
@@ -459,7 +451,7 @@ class GameScene extends Phaser.Scene
 
         for(var i = 0; i < 4; i++)
         {
-            iceblock.create(dropWidth * (i + 0.5), height - 130, 'gameele', 'iceblock').setScale(dropWidth / 312).refreshBody();
+            iceblock.create(dropWidth * (i + 0.5), height - 100, 'iceblock').setScale(dropWidth / 320).refreshBody();
         }
         
         // sprite
@@ -506,16 +498,16 @@ class GameScene extends Phaser.Scene
 
         this.cat.play('cat_blue');
 
-        const nextCat = this.add.sprite(width - 30, height - 200, 'nextcat').setScale(0.25);
-
-        // this.text = this.add.bitmapText(35, 10, 'nokia16').setScale(1.5).setScrollFactor(0);
-        
-        // this.add.image(10, 10, 'icon').setOrigin(0, 0).setScale(2).setScrollFactor(0);;
+        this.nextCat = this.add.sprite(width - 30, height - 200, 'nextcat').setScale(0.2);
+        this.nextCat.setAlpha(0.9);
+        //this.nextCat.setSize(50, 50);
+        this.nextCat.setInteractive();        
+        this.nextCat.on('pointerdown', this.changeBallColor, this);
 
         // fish 
 
         this.fishGroup = this.physics.add.group({            
-            defaultKey: 'gameele',
+            defaultKey: 'fish',
             maxSize: 10,
             createCallback: function (fish) {
                 fish.setName('fish' + this.getLength());
@@ -528,19 +520,25 @@ class GameScene extends Phaser.Scene
         });
 
 
-        // const pinkfish = this.add.sprite(dropWidth * 1.5, 50, 'gameele', 'pinkfish').setScale(dropWidth / 250);
+        // shark
 
-        // const bluefish = this.add.sprite(dropWidth * 2.5, 130, 'gameele', 'bluefish').setScale(dropWidth / 250);
+        this.shark = this.physics.add.sprite(0,height,'shark').setScale(0.3);
+        this.shark.body.setAllowGravity(false);
+        this.shark.setActive(false).setVisible(false);
+        
+        this.anims.create(
+            {
+                key: 'shark_shine',
+                frames: this.anims.generateFrameNumbers('shark', { start: 0, end: 2 }),
+                frameRate: 8,
+                repeat: -1
+            }
+        );
 
-        // const yellowfish = this.add.sprite(dropWidth * 3.5, 200, 'gameele', 'yellowfish').setScale(dropWidth / 250);
-
-        // const shark = this.add.sprite(dropWidth * 0.5, 220, 'shark').setScale(dropWidth / 280);
-
-        // shark.play('shark_shine');
 
         this.physics.add.collider(this.cat, iceblock);
         this.physics.add.overlap(this.cat, this.fishGroup, this.throughWall, null, this);
-
+        this.physics.add.overlap(this.cat, this.shark, this.getShark, null, this);
         // this.pauseIcon = this.add.image(width - 20, 20, 'pause').setInteractive();
         // this.pauseIcon.on('pointerdown', this.pauseGame, this);
 
@@ -596,6 +594,9 @@ class GameScene extends Phaser.Scene
         
         this.timedEvent = this.time.addEvent({ delay: this.TIME_SPEED, callback: this.onEvent, callbackScope: this, loop: true });
         
+        this.rainbowTimeEvent = this.time.addEvent({ delay: this.RAINBOW_INTERVAL, callback: this.onRainbowEvent, callbackScope: this, loop: true });
+       
+        this.secondsTimeEvent = this.time.addEvent({ delay: 1000, callback: this.onSecondsEvent, callbackScope: this, loop: true });
         // this.ballPassMusic = this.sound.add('knock_wall');
         // this.ballRainbowMusic = this.sound.add('ball_rainbow');
         // this.blockCrashMusic = this.sound.add('block_crash');
@@ -700,11 +701,18 @@ class GameScene extends Phaser.Scene
 
         Phaser.Actions.IncY(this.fishGroup.getChildren(), delta * this.wallFlySpeed);
 
+        this.shark.y += delta * this.wallFlySpeed;
+
         this.fishGroup.children.iterate(function (wall) {
             if (wall.y > that.parent.height) {
                 that.fishGroup.killAndHide(wall);
             }
         });
+
+        if (this.shark.active && this.shark.visible && this.shark.y > that.parent.height){
+            this.shark.setActive(false).setVisible(false);
+            this.rainbowExist = false;
+        }
 
         var p = this.input.activePointer;
 
@@ -754,11 +762,11 @@ class GameScene extends Phaser.Scene
     // timer event
     onEvent (){
         
-        var randomPart = Phaser.Math.Between(0, 3);
+        this.randomPart = Phaser.Math.Between(0, 3);
         var randomColor = Phaser.Math.Between(0, 2);
 
         var wallWidth = this.parent.width / 4;
-        var wall = this.fishGroup.get((randomPart + 0.5) * wallWidth, 0);
+        var wall = this.fishGroup.get((this.randomPart + 0.5) * wallWidth, 20);
 
         if (!wall){
             return;
@@ -786,8 +794,8 @@ class GameScene extends Phaser.Scene
         //     wall.clearTint();
         // }
 
-        wall.setScale(0.3);
-
+        //wall.setSize(wallWidth, 50, true);
+        wall.setScale(wallWidth / 250);
         // // show the rainbow
         // if (this.rainbowCounterDown <= 0)
         // {
@@ -805,19 +813,57 @@ class GameScene extends Phaser.Scene
         // {
 
             if (randomColor === 1){
-                wall.setFrame('yellowfish');
+                wall.setFrame(2);
             }
             else if (randomColor === 2){
-                wall.setFrame('pinkfish');
+                wall.setFrame(0);
             }
             else{
-                wall.setFrame('bluefish');
+                wall.setFrame(1);
             }
 
             wall.setData('color', randomColor);
             wall.setActive(true).setVisible(true);
             wall.body.setAllowGravity(false);
         // }
+    }
+
+    onRainbowEvent(){
+
+        var wallWidth = this.parent.width / 4;
+
+        var sharkpart = this.randomPart - 1;
+        sharkpart = sharkpart < 0 ? 3 : sharkpart;
+
+        this.shark.x = (sharkpart + 0.5) * wallWidth;
+        this.shark.y = 0;
+
+        this.shark.setActive(true).setVisible(true);
+        this.rainbowExist = true;
+    }
+
+    onSecondsEvent(){
+
+        if (this.ballGotRainbow){
+            if (this.rainbowBlingTime < this.RAINBOW_DURING_TIMES){
+                this.rainbowBlingTime++;
+            }
+            else{
+                this.ballGotRainbow = false;
+
+                this.backgroundScene.changeBackground();
+
+                this.rainbowBlingTime = 0;
+                // this.ball.anims.stop(); 
+                
+                // var ballColor = this.data.get('color');
+                // this.ball.setFrame(ballColor);
+            }
+        }
+        
+        if (!this.rainbowExist && !this.ballGotRainbow){
+            this.rainbowCounterDown--;            
+        }
     }
 
     throughWall(ball, wall){
@@ -914,6 +960,8 @@ class GameScene extends Phaser.Scene
         else {
             this.cat.play('cat_pink');
         }
+
+        this.nextCat.setFrame(ballColor);
         // this.changeColor.setFrame(ballColor);
         // this.ball.setFrame(ballColor);
         // this.nextColor.setFrame(nextColor);
@@ -932,6 +980,26 @@ class GameScene extends Phaser.Scene
             block.disableBody(true, true);
 
             this.walls.killAndHide(wall);
+        }
+    }
+
+    getShark(){
+
+        if (this.shark.active && this.shark.visible)
+        {
+            this.shark.setActive(false).setVisible(false);
+
+            this.ballGotRainbow = true;
+            this.rainbowExist = false;
+            this.rainbowBlingTime = 0;
+            
+            // this.ball.anims.play('bling', true);
+            // this.rainbowBall.anims.play('bling', true);
+
+            // this.rainbowCDText.visible = true;
+            // this.rainbowBall.visible = true;
+
+            this.backgroundScene.changeBackground();
         }
     }
 
@@ -1108,8 +1176,8 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 850 },
-            debug: false
+            gravity: { y: 400 },
+            debug: true
         }
     },
     scene: [ BackgroundScene, WaveScene, StartScene, GameScene, RestartScene, PauseScene ]
