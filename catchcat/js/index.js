@@ -72,9 +72,17 @@ class StartScene extends Phaser.Scene
 
         var x = width / 2;
         var y = height / 2 - 120;
-        var name = 'Start';
+        // var name = 'Start';
 
-        this.add.image(x, y,'logo-begin').setScale(width / 1100);
+        this.anims.create({
+            key: 'logoanim',
+            frames: this.anims.generateFrameNumbers('logo-anim', { start: 0, end: 7 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        const logoSprite = this.add.sprite(x, y,'logo-anim').setScale(width / 1100);
+        logoSprite.anims.play('logoanim');
 
         const startButton = this.add.sprite(x, y + 150, 'button-begin').setScale(width / 1100).setInteractive();
 
@@ -171,15 +179,12 @@ class BackgroundScene extends Phaser.Scene
         
 
         // atlas
-        // this.load.atlas('newbg', 'assets/item/1080x1920-background.png', 'assets/item/1080x1920-background.json');
-
-        // this.load.atlas('shinyshell', 'assets/item/1080x1920-shine.png', 'assets/item/1080x1920-shine.json');
 
         this.load.atlas('seawave', 'assets/item/1080x360-water.png', 'assets/item/1080x360-water.json');
         
         this.load.atlas('newui', 'assets/item/154x50-UI.png', 'assets/item/154x50-UI.json');
         
-        //this.load.atlas('gameele', 'assets/item/322x110-fish.png', 'assets/item/322x110-fish.json');
+        this.load.atlas('fishui', 'assets/item/322x110-fish.png', 'assets/item/322x110-fish.json');
         
         this.load.image('iceblock', 'assets/item/322x110-iceblock.png');
         
@@ -219,9 +224,20 @@ class BackgroundScene extends Phaser.Scene
             {frameWidth:322, frameHeight: 110}
         );
 
+        this.load.spritesheet(
+            'logo-anim',
+            'assets/item/1002x614-begananim.png',
+            {frameWidth:1002, frameHeight: 615}
+        );
+
         // logo
-        this.load.image('logo-begin', 'assets/item/ui/998x610-began.png');
+        // this.load.image('logo-begin', 'assets/item/ui/998x610-began.png');
+
+        this.load.image('logo-end', 'assets/item/ui/846x502-overgame.png');
     
+    
+        this.load.image('clock-ui', 'assets/item/52x52-clock.png');
+
         this.load.spritesheet(
             'button-begin',
             'assets/item/ui/430x152-button.png',
@@ -238,16 +254,6 @@ class BackgroundScene extends Phaser.Scene
         this.bgCover = this.add.sprite(-2, -2, 'newbg').setOrigin(0, 0).setScale(width / 1050, height / 1900);
         this.bgFrame = 0;
 
-        // this.tweens.add({
-        //     targets: [this.seawave_middle],
-        //     duration: 5000,
-        //     x: '-=30',
-        //     y: '-=60',
-        //     ease: 'Sine.easeInOut',
-        //     yoyo: true,
-        //     repeat: -1
-        // });
-        
         // data
         this.data.set({score: 0, bestScore: 0});
         
@@ -344,7 +350,7 @@ class GameScene extends Phaser.Scene
     GAME_HEIGHT = 960;
     TIME_SPEED = 1200;
 
-    BALL_MOVE_SPPED = 200;
+    FISH_MOVE_X_SPPED = 200;
     BALL_ROTATE_ANGLE = 15;
     BALL_BOUNCE_HEIGHT = 120;
 
@@ -372,7 +378,7 @@ class GameScene extends Phaser.Scene
     ballRainbowMusic;
     blockCrashMusic;
 
-    wallFlySpeed;
+    fishDropSpeed;
 
     changeColor;
     nextColor;
@@ -403,6 +409,13 @@ class GameScene extends Phaser.Scene
     rainbowTimeEvent;
     secondsTimeEvent;
 
+    // data
+    fishGoalMap;
+    pinkGoalText;
+    blueGoalText;
+    yellowGoalText;
+    clockTimeText;
+
     constructor ()
     {
         super('GameScene');
@@ -410,6 +423,7 @@ class GameScene extends Phaser.Scene
 
     create(){
  
+        // initial data
         this.rainbowExist = false;
         this.ballGotRainbow = false;
         this.rainbowCounterDown = Phaser.Math.Between(10, 15);
@@ -417,6 +431,15 @@ class GameScene extends Phaser.Scene
         this.currentLevel = 0;
 
         this.data.set('color', 0);
+
+        this.fishGoalMap = {
+            pink : 5,
+            blue : 5,
+            yellow : 5,
+            level : 1,
+            clockTime: 60,
+        };
+        // 
 
         const width = this.scale.gameSize.width;
         const height = this.scale.gameSize.height;
@@ -441,8 +464,16 @@ class GameScene extends Phaser.Scene
 
         // ui
 
-        const fishicon = this.add.image(30, 15,'newui','fishicon').setScale(0.25);
+        const clockicon = this.add.image(20,20, 'clock-ui').setScale(0.5);
+        // const fishicon = this.add.image(30, 20, 'newui', 'fishicon').setScale(0.25);
+        const pinkGoal = this.add.image(width - 180, 20, 'fishui', 'pinkfish').setScale(0.15);
+        const blueGoal = this.add.image(width - 120, 20, 'fishui', 'bluefish').setScale(0.15);
+        const yellowGoal = this.add.image(width - 60, 20, 'fishui', 'yellowfish').setScale(0.15);
 
+        this.pinkGoalText = this.add.text(width - 160, 13, '00', { fontFamily: 'Arial', fontSize: 16, color: '#00ff00' });
+        this.blueGoalText = this.add.text(width - 100, 13, '00', { fontFamily: 'Arial', fontSize: 16, color: '#00ff00' });
+        this.yellowGoalText = this.add.text(width - 40, 13, '00', { fontFamily: 'Arial', fontSize: 16, color: '#00ff00' });
+        this.clockTimeText = this.add.text(40, 13, '00', { fontFamily: 'Arial', fontSize: 16, color: '#00ff00' });
 
         // block
         const iceblock = this.physics.add.staticGroup();
@@ -537,7 +568,7 @@ class GameScene extends Phaser.Scene
 
 
         this.physics.add.collider(this.cat, iceblock);
-        this.physics.add.overlap(this.cat, this.fishGroup, this.throughWall, null, this);
+        this.physics.add.overlap(this.cat, this.fishGroup, this.catchFish, null, this);
         this.physics.add.overlap(this.cat, this.shark, this.getShark, null, this);
         // this.pauseIcon = this.add.image(width - 20, 20, 'pause').setInteractive();
         // this.pauseIcon.on('pointerdown', this.pauseGame, this);
@@ -547,51 +578,6 @@ class GameScene extends Phaser.Scene
         this.input.addPointer(1);
         this.cursors = this.input.keyboard.createCursorKeys();
 
-        //this.input.mouse.disableContextMenu();
-
-        // this.ball = this.physics.add.sprite(width / 2, height / 2 + 80, 'ball').setScale(0.8);
-        // this.ball.setBounce(0.8);
-        // this.ball.setCollideWorldBounds(true);
-        
-        // this.rainbowBall= this.add.sprite(20, 50, 'ball').setScale(0.44);
-        
-        // this.rainbowCDText = this.add.bitmapText(35, 40, 'nokia16').setScale(1.5);
-        
-        // animate
-        // this.anims.create({
-        //     key: 'bling',
-        //     frames: this.anims.generateFrameNumbers('ball', {start: 0, end: 2}),
-        //     frameRate: 10,
-        //     repeat: -1
-        // });
-        
-        // this.blocks = this.physics.add.staticGroup();
-        
-        // var wallWidth = width / 4;
-        // for(var i = 0; i < 4; i++){
-        //     for(var j = 0; j < 4; j++){
-        //         this.blocks.create(i * wallWidth, height - (j + 1) * 24, 'block').setOrigin(0, 0).setScale(wallWidth / 128, 1).refreshBody();
-        //     }
-        // }
-
-        // this.walls = this.physics.add.group({
-        //     defaultKey: 'wall',
-        //     maxSize: 20,
-        //     createCallback: function (wall) {
-        //         wall.setName('wall' + this.getLength());
-        //         wall.body.setAllowGravity(false);
-        //         console.log('Created', wall.name);
-        //     },
-        //     removeCallback: function (wall) {
-        //         console.log('Removed', wall.name);
-        //     }
-        // });
-
-        // this.physics.add.collider(this.ball, this.blocks);
-
-        // this.physics.add.overlap(this.ball, this.walls, this.throughWall, null, this);
-        // this.physics.add.collider(this.walls, this.blocks, this.crashBlock, null, this);
-        
         this.timedEvent = this.time.addEvent({ delay: this.TIME_SPEED, callback: this.onEvent, callbackScope: this, loop: true });
         
         this.rainbowTimeEvent = this.time.addEvent({ delay: this.RAINBOW_INTERVAL, callback: this.onRainbowEvent, callbackScope: this, loop: true });
@@ -603,7 +589,7 @@ class GameScene extends Phaser.Scene
 
         this.debugText = this.add.text(10, 80, '', {fontSize: '16px', fill: '#000'});
             
-        this.wallFlySpeed = Phaser.Math.GetSpeed(600, 3);
+        this.fishDropSpeed = Phaser.Math.GetSpeed(600, 3);
 
         // this.changeColor = this.add.sprite(width - 30, height - 200, 'ball').setScale(1).setInteractive();
         // this.changeColor.alpha = 0.9;
@@ -630,14 +616,10 @@ class GameScene extends Phaser.Scene
     
         },this);
 
-        // this.input.on('pointerup', function (pointer) {
-
-        //     this.changeColorCD = false;
-    
-        // }, this);
-
         const waveScene = this.scene.get('WaveScene');
         waveScene.BringToTopScene();
+
+
     }
     
     //  ------------------------
@@ -681,7 +663,7 @@ class GameScene extends Phaser.Scene
                 'Ball Y:' + that.ball.y,
                 'Ball IsDown:' + that.ball.body.blocked.down,
                 'Ball Embedded:' + that.ball.body.embedded,
-                'Speed:' + delta * that.wallFlySpeed,
+                'Speed:' + delta * that.fishDropSpeed,
                 'Pointer1:' + that.input.pointer1.isDown,
                 'Pointer2:' + that.input.pointer2.isDown,
                 'Pointer1 Duration:' + that.input.pointer1.getDuration(),
@@ -689,6 +671,7 @@ class GameScene extends Phaser.Scene
             ]);
         }
 
+        this.renderFishGoal();
         // if (this.ballGotRainbow){
         //     var rainbowText = (Array(2).join(0) + (this.RAINBOW_DURING_TIMES - this.rainbowBlingTime)).slice(-2);
         //     this.rainbowCDText.setText(rainbowText);
@@ -699,9 +682,9 @@ class GameScene extends Phaser.Scene
         //     this.rainbowBall.anims.stop();
         // }
 
-        Phaser.Actions.IncY(this.fishGroup.getChildren(), delta * this.wallFlySpeed);
+        Phaser.Actions.IncY(this.fishGroup.getChildren(), delta * this.fishDropSpeed);
 
-        this.shark.y += delta * this.wallFlySpeed;
+        this.shark.y += delta * this.fishDropSpeed;
 
         this.fishGroup.children.iterate(function (wall) {
             if (wall.y > that.parent.height) {
@@ -717,7 +700,7 @@ class GameScene extends Phaser.Scene
         var p = this.input.activePointer;
 
         var deltaX = 0;
-        var rollSpeed = this.BALL_MOVE_SPPED;
+        var fishXSpeed = this.FISH_MOVE_X_SPPED;
         // var rollAngle = this.ballGotRainbow ? this.BALL_ROTATE_ANGLE + 3 : this.BALL_ROTATE_ANGLE;
 
         if (p.isDown && p.getDuration() > 100)
@@ -727,11 +710,11 @@ class GameScene extends Phaser.Scene
 
         if (deltaX < 0 || this.cursors.left.isDown)
         {
-            this.cat.setVelocityX(-rollSpeed);
+            this.cat.setVelocityX(-fishXSpeed);
         }
         else if (deltaX > 0 || this.cursors.right.isDown)
         {
-            this.cat.setVelocityX(rollSpeed);
+            this.cat.setVelocityX(fishXSpeed);
         }
         else{
             this.cat.setVelocityX(0);
@@ -772,63 +755,28 @@ class GameScene extends Phaser.Scene
             return;
         }
 
-        // if (this.ballGotRainbow){
-        //     if (this.rainbowBlingTime < this.RAINBOW_DURING_TIMES){
-        //         this.rainbowBlingTime++;
-        //     }
-        //     else{
-        //         this.ballGotRainbow = false;
-
-        //         this.ball.anims.stop(); 
-                
-        //         var ballColor = this.data.get('color');
-        //         this.ball.setFrame(ballColor);
-        //     }
-        // }
-        
-        // if (!this.rainbowExist && !this.ballGotRainbow){
-        //     this.rainbowCounterDown--;            
-        // }
-
-        // if (wall.isTinted){
-        //     wall.clearTint();
-        // }
-
-        //wall.setSize(wallWidth, 50, true);
         wall.setScale(wallWidth / 250);
-        // // show the rainbow
-        // if (this.rainbowCounterDown <= 0)
-        // {
-        //     this.rainbowCounterDown = Phaser.Math.Between(20, 30);
+        
+        if (randomColor === 1){
+            wall.setFrame(2);
+        }
+        else if (randomColor === 2){
+            wall.setFrame(0);
+        }
+        else{
+            wall.setFrame(1);
+        }
 
-        //     this.rainbowExist = true;
-
-        //     wall.setFrame(3);
-            
-        //     wall.setData('color', 4);
-        //     wall.setActive(true).setVisible(true);
-        //     wall.body.setAllowGravity(false);
-        // }
-        // else
-        // {
-
-            if (randomColor === 1){
-                wall.setFrame(2);
-            }
-            else if (randomColor === 2){
-                wall.setFrame(0);
-            }
-            else{
-                wall.setFrame(1);
-            }
-
-            wall.setData('color', randomColor);
-            wall.setActive(true).setVisible(true);
-            wall.body.setAllowGravity(false);
-        // }
+        wall.setData('color', randomColor);
+        wall.setActive(true).setVisible(true);
+        wall.body.setAllowGravity(false);
     }
 
     onRainbowEvent(){
+
+        if (this.backgroundScene.gameOver){
+            return;
+        }
 
         var wallWidth = this.parent.width / 4;
 
@@ -844,6 +792,17 @@ class GameScene extends Phaser.Scene
 
     onSecondsEvent(){
 
+        if (this.backgroundScene.gameOver){
+            return;
+        }
+
+        this.fishGoalMap.clockTime--;
+
+        if (this.fishGoalMap.clockTime == 0)
+        {
+            this.endGame();
+        }
+
         if (this.ballGotRainbow){
             if (this.rainbowBlingTime < this.RAINBOW_DURING_TIMES){
                 this.rainbowBlingTime++;
@@ -854,10 +813,6 @@ class GameScene extends Phaser.Scene
                 this.backgroundScene.changeBackground();
 
                 this.rainbowBlingTime = 0;
-                // this.ball.anims.stop(); 
-                
-                // var ballColor = this.data.get('color');
-                // this.ball.setFrame(ballColor);
             }
         }
         
@@ -866,11 +821,30 @@ class GameScene extends Phaser.Scene
         }
     }
 
-    throughWall(ball, wall){
-        if (wall.active && wall.visible){
-            if (wall.getData('color') === this.data.get('color') || wall.getData('color') === 4 || this.ballGotRainbow)
+    catchFish(cat, fish){
+        if (fish.active && fish.visible){
+            if (fish.getData('color') === this.data.get('color') || this.ballGotRainbow)
             {
-                if (wall.getData('color') === 4){
+                var fishColor = fish.getData('color');
+
+                switch(fishColor){
+                    case 0: {
+                        this.fishGoalMap.blue = this.fishGoalMap.blue > 0 ? this.fishGoalMap.blue - 1 : 0;
+                        break;
+                    }
+                    case 1: {
+                        this.fishGoalMap.yellow = this.fishGoalMap.yellow > 0 ? this.fishGoalMap.yellow - 1 : 0;
+                        break;
+                    }
+                    case 2: {
+                        this.fishGoalMap.pink = this.fishGoalMap.pink > 0 ? this.fishGoalMap.pink - 1 : 0;
+                        break;
+                    }
+                    default:
+                        break;
+                }
+
+                if (fish.getData('color') === 4){
                     this.ballRainbowMusic.play( {volume: 0.8} );
 
                     this.ballGotRainbow = true;
@@ -888,9 +862,8 @@ class GameScene extends Phaser.Scene
                 }
 
                 this.backgroundScene.updateScore(10);
-
         
-                this.fishGroup.killAndHide(wall);
+                this.fishGroup.killAndHide(fish);
 
                 // Every 100 points add 1 row block
 
@@ -929,6 +902,22 @@ class GameScene extends Phaser.Scene
         
                 //     this.timedEvent = this.time.addEvent({ delay: this.TIME_SPEED - this.TIME_REDUCE_SPAN, callback: this.onEvent, callbackScope: this, loop: true });
                 // }
+
+                if (this.fishGoalMap.pink == 0 && this.fishGoalMap.blue == 0 && this.fishGoalMap.yellow == 0){
+                    // next level
+                    this.fishGoalMap.level += 1;
+
+                    this.fishGoalMap.level = Math.max(this.fishGoalMap.level, 3);
+
+                    var goalMin = 5 * this.fishGoalMap.level;
+                    var goalMax = 7 * this.fishGoalMap.level;
+
+                    this.fishGoalMap.pink = Phaser.Math.Between(goalMin, goalMax);
+                    this.fishGoalMap.blue = Phaser.Math.Between(goalMin, goalMax);
+                    this.fishGoalMap.yellow = Phaser.Math.Between(goalMin, goalMax);
+
+                    this.fishGoalMap.clockTime += (30 * (1 + this.fishGoalMap.level));
+                }
             }
             else{
                 // this.endGame();
@@ -1003,6 +992,15 @@ class GameScene extends Phaser.Scene
         }
     }
 
+    renderFishGoal(){
+
+        this.pinkGoalText.setText((Array(2).join(0) + this.fishGoalMap.pink).slice(-2));
+        this.blueGoalText.setText((Array(2).join(0) + this.fishGoalMap.blue).slice(-2));
+        this.yellowGoalText.setText((Array(2).join(0) + this.fishGoalMap.yellow).slice(-2));
+        this.clockTimeText.setText((Array(3).join(0) + this.fishGoalMap.clockTime).slice(-3));
+
+    }
+
     pauseGame (){        
         this.scene.switch('PauseScene');
     }
@@ -1014,6 +1012,8 @@ class GameScene extends Phaser.Scene
         this.physics.pause();
 
         this.timedEvent.remove(false);
+        this.rainbowTimeEvent.remove(false);
+        this.secondsTimeEvent.remove(false);
 
         this.scene.start('RestartScene');
              
@@ -1045,36 +1045,43 @@ class RestartScene extends Phaser.Scene
 
         var x = width / 2;
         var y = height / 2;
-        var name = 'Restart';
 
-        this.add.image(x, y - 140,'end-logo').setScale(2.6);
+        const endlogo = this.add.image(x, y - 120, 'logo-end').setScale(width / 1100);
+        // var name = 'Restart';
 
-        this.add.image(x - 80, y - 40,'end-best').setScale(2.2);
+        // this.add.image(x, y - 140,'end-logo').setScale(2.6);
 
-        this.add.image(x, y - 10,'end-line').setScale(2, 1);
+        // this.add.image(x - 80, y - 40,'end-best').setScale(2.2);
 
-        this.add.image(x, y + 35,'end-score').setScale(1.8, 2)
+        // this.add.image(x, y - 10,'end-line').setScale(2, 1);
 
-        this.restartButton = this.add.image(x, y + 100, 'button', 0).setInteractive();
-        this.restartButton.name = name;
-        this.restartButton.setScale(2.5);
+        // this.add.image(x, y + 35,'end-score').setScale(1.8, 2)
+
+        
+        const startButton = this.add.sprite(x, y + 30, 'button-begin').setScale(width / 1100).setInteractive();
+
+        startButton.setFrame(0);
+
+        // this.restartButton = this.add.image(x, y - 30, 'button', 0).setInteractive();
+        // this.restartButton.name = name;
+        // this.restartButton.setScale(2.5);
     
-        this.restartButton_Text = this.add.bitmapText(x - 25, y + 85, 'nokia16').setScale(2).setTint(0x0000ff);
-        this.restartButton_Text.setText(name);
-        this.restartButton_Text.x += (this.restartButton.width - this.restartButton_Text.width) / 2;
+        // this.restartButton_Text = this.add.bitmapText(x - 25, y + 85, 'nokia16').setScale(2).setTint(0x0000ff);
+        // this.restartButton_Text.setText(name);
+        // this.restartButton_Text.x += (this.restartButton.width - this.restartButton_Text.width) / 2;
 
-        this.bestScore_Text = this.add.bitmapText(x + 5, y - 55, 'nokia16').setScale(2.2);
-        this.currScore_Text = this.add.bitmapText(x - 62, y + 18, 'nokia16').setScale(2.2);
+        // this.bestScore_Text = this.add.bitmapText(x + 5, y - 55, 'nokia16').setScale(2.2);
+        // this.currScore_Text = this.add.bitmapText(x - 62, y + 18, 'nokia16').setScale(2.2);
 
-        this.restartButton.on('pointerover', function(event){
-            this.restartButton.alpha = 0.5;
+        startButton.on('pointerover', function(event){
+            startButton.alpha = 0.5;
         }, this);
 
-        this.restartButton.on('pointerout', function(event){
-            this.restartButton.alpha = 1;
+        startButton.on('pointerout', function(event){
+            startButton.alpha = 1;
         }, this);
 
-        this.restartButton.once('pointerup', this.startGame, this);
+        startButton.once('pointerup', this.startGame, this);
 
         this.input.keyboard.on('keyup-ENTER', function (event) {
 
@@ -1084,11 +1091,11 @@ class RestartScene extends Phaser.Scene
 
         this.backgroundScene = this.scene.get('BackgroundScene');
 
-        var bestScore = this.backgroundScene.getBestScore();
-        var currScore = this.backgroundScene.getScore();
+        // var bestScore = this.backgroundScene.getBestScore();
+        // var currScore = this.backgroundScene.getScore();
 
-        this.bestScore_Text.setText((Array(this.SCORE_NUM).join(0) + bestScore).slice(-this.SCORE_NUM));
-        this.currScore_Text.setText((Array(this.SCORE_NUM).join(0) + currScore).slice(-this.SCORE_NUM));
+        // this.bestScore_Text.setText((Array(this.SCORE_NUM).join(0) + bestScore).slice(-this.SCORE_NUM));
+        // this.currScore_Text.setText((Array(this.SCORE_NUM).join(0) + currScore).slice(-this.SCORE_NUM));
     }
 
     startGame(event){
@@ -1176,8 +1183,8 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 400 },
-            debug: true
+            gravity: { y: 300 },
+            debug: false
         }
     },
     scene: [ BackgroundScene, WaveScene, StartScene, GameScene, RestartScene, PauseScene ]
