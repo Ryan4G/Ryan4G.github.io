@@ -74,15 +74,17 @@ class StartScene extends Phaser.Scene
         var y = height / 2 - 120;
         // var name = 'Start';
 
-        this.anims.create({
-            key: 'logoanim',
-            frames: this.anims.generateFrameNumbers('logo-anim', { start: 0, end: 7 }),
-            frameRate: 5,
-            repeat: -1
-        });
+        // this.anims.create({
+        //     key: 'logoanim',
+        //     frames: this.anims.generateFrameNumbers('logo-anim', { start: 0, end: 7 }),
+        //     frameRate: 5,
+        //     repeat: -1
+        // });
 
-        const logoSprite = this.add.sprite(x, y,'logo-anim').setScale(width / 1100);
-        logoSprite.anims.play('logoanim');
+        // const logoSprite = this.add.sprite(x, y,'logo-anim').setScale(width / 1100);
+        // logoSprite.anims.play('logoanim');
+
+        this.add.image(x, y, 'logo-begin').setScale(width / 1100);
 
         const startButton = this.add.sprite(x, y + 150, 'button-begin').setScale(width / 1100).setInteractive();
 
@@ -166,16 +168,9 @@ class BackgroundScene extends Phaser.Scene
     preload ()
     {
         
-        this.load.image('end-logo', 'assets/ui/ending.png');
-        this.load.image('end-best', 'assets/ui/ending2.png');
-        this.load.image('end-line', 'assets/ui/ending3.png');
-        this.load.image('end-score', 'assets/ui/ending4.png');
-
         // Music
-        this.load.audio('bg', 'assets/sounds/bg-happy.mp3');
-        this.load.audio('block_crash', 'assets/sounds/block_crash.mp3');
-        this.load.audio('knock_wall', 'assets/sounds/knock_wall.mp3');
-        this.load.audio('ball_rainbow', 'assets/sounds/ball_rainbow.mp3');
+        this.load.audio('bg', 'assets/sounds/bg.mp3');
+        this.load.audio('sharktime', 'assets/sounds/sharktime.mp3');
         
 
         // atlas
@@ -231,7 +226,7 @@ class BackgroundScene extends Phaser.Scene
         );
 
         // logo
-        // this.load.image('logo-begin', 'assets/item/ui/998x610-began.png');
+        this.load.image('logo-begin', 'assets/item/ui/998x610-began.png');
 
         this.load.image('logo-end', 'assets/item/ui/846x502-overgame.png');
     
@@ -343,12 +338,12 @@ class BackgroundScene extends Phaser.Scene
 //  This Scene is aspect ratio locked at 640 x 960 (and scaled and centered accordingly)
 class GameScene extends Phaser.Scene
 {
-    RAINBOW_INTERVAL = 15000;
+    RAINBOW_INTERVAL = 20000;
 
     ADDBLOCK_SCORE = 50;
     GAME_WIDTH = 640;
     GAME_HEIGHT = 960;
-    TIME_SPEED = 1200;
+    TIME_SPEED = 900;
 
     FISH_MOVE_X_SPPED = 200;
     BALL_ROTATE_ANGLE = 15;
@@ -406,7 +401,7 @@ class GameScene extends Phaser.Scene
 
     randomPart;
 
-    rainbowTimeEvent;
+    sharkTimeEvent;
     secondsTimeEvent;
 
     // data
@@ -415,6 +410,9 @@ class GameScene extends Phaser.Scene
     blueGoalText;
     yellowGoalText;
     clockTimeText;
+
+    // music
+    sharkMusic;
 
     constructor ()
     {
@@ -433,11 +431,11 @@ class GameScene extends Phaser.Scene
         this.data.set('color', 0);
 
         this.fishGoalMap = {
-            pink : 5,
-            blue : 5,
-            yellow : 5,
+            pink : 2,
+            blue : 2,
+            yellow : 2,
             level : 1,
-            clockTime: 60,
+            clockTime: 15,
         };
         // 
 
@@ -474,6 +472,9 @@ class GameScene extends Phaser.Scene
         this.blueGoalText = this.add.text(width - 100, 13, '00', { fontFamily: 'Arial', fontSize: 16, color: '#00ff00' });
         this.yellowGoalText = this.add.text(width - 40, 13, '00', { fontFamily: 'Arial', fontSize: 16, color: '#00ff00' });
         this.clockTimeText = this.add.text(40, 13, '00', { fontFamily: 'Arial', fontSize: 16, color: '#00ff00' });
+
+        // music
+        this.sharkMusic = this.sound.add('sharktime', { loop: true });
 
         // block
         const iceblock = this.physics.add.staticGroup();
@@ -523,7 +524,7 @@ class GameScene extends Phaser.Scene
             }
         );
 
-        this.cat = this.physics.add.sprite(width/2, height - 205, 'cat').setScale(0.25);
+        this.cat = this.physics.add.sprite(width/2, height - 205, 'cat').setScale(0.3);
         this.cat.setBounce(0.8);
         this.cat.setCollideWorldBounds(true);
 
@@ -580,7 +581,7 @@ class GameScene extends Phaser.Scene
 
         this.timedEvent = this.time.addEvent({ delay: this.TIME_SPEED, callback: this.onEvent, callbackScope: this, loop: true });
         
-        this.rainbowTimeEvent = this.time.addEvent({ delay: this.RAINBOW_INTERVAL, callback: this.onRainbowEvent, callbackScope: this, loop: true });
+        this.sharkTimeEvent = this.time.addEvent({ delay: this.RAINBOW_INTERVAL, callback: this.onRainbowEvent, callbackScope: this, loop: true });
        
         this.secondsTimeEvent = this.time.addEvent({ delay: 1000, callback: this.onSecondsEvent, callbackScope: this, loop: true });
         // this.ballPassMusic = this.sound.add('knock_wall');
@@ -813,6 +814,10 @@ class GameScene extends Phaser.Scene
                 this.backgroundScene.changeBackground();
 
                 this.rainbowBlingTime = 0;
+                
+                this.backgroundScene.bgMusic.mute = false;
+
+                this.sharkMusic.stop();
             }
         }
         
@@ -842,23 +847,6 @@ class GameScene extends Phaser.Scene
                     }
                     default:
                         break;
-                }
-
-                if (fish.getData('color') === 4){
-                    this.ballRainbowMusic.play( {volume: 0.8} );
-
-                    this.ballGotRainbow = true;
-                    this.rainbowExist = false;
-                    this.rainbowBlingTime = 0;
-                    
-                    // this.ball.anims.play('bling', true);
-                    // this.rainbowBall.anims.play('bling', true);
-
-                    this.rainbowCDText.visible = true;
-                    this.rainbowBall.visible = true;
-                }
-				else{
-                    // this.ballPassMusic.play( {volume: 0.8} );
                 }
 
                 this.backgroundScene.updateScore(10);
@@ -907,7 +895,7 @@ class GameScene extends Phaser.Scene
                     // next level
                     this.fishGoalMap.level += 1;
 
-                    this.fishGoalMap.level = Math.max(this.fishGoalMap.level, 3);
+                    this.fishGoalMap.level = Math.min(this.fishGoalMap.level, 3);
 
                     var goalMin = 5 * this.fishGoalMap.level;
                     var goalMax = 7 * this.fishGoalMap.level;
@@ -989,6 +977,9 @@ class GameScene extends Phaser.Scene
             // this.rainbowBall.visible = true;
 
             this.backgroundScene.changeBackground();
+            this.backgroundScene.bgMusic.mute = true;
+
+            this.sharkMusic.play({volume: 1});
         }
     }
 
@@ -1012,7 +1003,7 @@ class GameScene extends Phaser.Scene
         this.physics.pause();
 
         this.timedEvent.remove(false);
-        this.rainbowTimeEvent.remove(false);
+        this.sharkTimeEvent.remove(false);
         this.secondsTimeEvent.remove(false);
 
         this.scene.start('RestartScene');
