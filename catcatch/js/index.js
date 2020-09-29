@@ -72,17 +72,6 @@ class StartScene extends Phaser.Scene
 
         var x = width / 2;
         var y = height / 2 - 120;
-        // var name = 'Start';
-
-        // this.anims.create({
-        //     key: 'logoanim',
-        //     frames: this.anims.generateFrameNumbers('logo-anim', { start: 0, end: 7 }),
-        //     frameRate: 5,
-        //     repeat: -1
-        // });
-
-        // const logoSprite = this.add.sprite(x, y,'logo-anim').setScale(width / 1100);
-        // logoSprite.anims.play('logoanim');
 
         this.add.image(x, y, 'logo-begin').setScale(width / 1100);
 
@@ -93,14 +82,6 @@ class StartScene extends Phaser.Scene
         const exitButton = this.add.sprite(x, y + 210, 'button-begin').setScale(width / 1100).setInteractive();
 
         exitButton.setFrame(2);
-
-        // this.startButton = this.add.image(x + 150, y - 30, 'button', 0).setInteractive();
-        // this.startButton.name = name;
-        // this.startButton.setScale(2.5);
-    
-        // this.startButton_Text = this.add.bitmapText(x + 125, y - 48, 'nokia16').setScale(2.2).setTint(0x0000ff);
-        // this.startButton_Text.setText(name);
-        // this.startButton_Text.x += (this.startButton.width - this.startButton_Text.width) / 2;
 
         startButton.on('pointerover', function(event){
             startButton.setFrame(1);
@@ -226,16 +207,16 @@ class BackgroundScene extends Phaser.Scene
         );
 
         // logo
-        this.load.image('logo-begin', 'assets/item/ui/998x610-began.png');
+        this.load.image('logo-begin', 'assets/ui/998x610-began.png');
 
-        this.load.image('logo-end', 'assets/item/ui/846x502-overgame.png');
+        this.load.image('logo-end', 'assets/ui/846x502-overgame.png');
     
     
-        this.load.image('clock-ui', 'assets/item/52x52-clock.png');
+        this.load.image('clock-ui', 'assets/ui/52x52-clock.png');
 
         this.load.spritesheet(
             'button-begin',
-            'assets/item/ui/430x152-button.png',
+            'assets/ui/430x152-button.png',
             {frameWidth:434, frameHeight: 157}
         );
 
