@@ -1,6 +1,17 @@
 // 背景层
 class BackgroundScene extends Phaser.Scene
 {
+
+    text;
+
+    flag;
+    startDeg;
+    endDeg;
+
+    timeEvent;
+
+    layer;
+
     constructor ()
     {
         super('BackgroundScene');
@@ -16,49 +27,116 @@ class BackgroundScene extends Phaser.Scene
 
     create ()
     {
+        this.flag = 0;
+        this.startDeg = this.endDeg = 0;
+
         const width = this.scale.gameSize.width;
         const height = this.scale.gameSize.height;
 
-        console.log(this.scale.gameSize);
-        // const bg = this.add.image(0, 0, 'bg').setOrigin(0).setScale(width/800, height/600);
-        const bg = this.add.image(0, 0, 'bg').setOrigin(0).setScale(0.2);
+        this.layer = this.add.container();
+        
+        // console.log(this.scale.gameSize);
+        const bg = this.add.image(0, 0, 'bg').setOrigin(0).setScale(width/800, height/600);
+        // const bg = this.add.image(0, 0, 'bg').setOrigin(0).setScale(0.2);
+
+        this.text = this.add.text(width / 2, height / 2, '', { fontFamily: 'Arial', fontSize: 16, color: '#ffffff' });
 
         this.checkOriention(this.scale.orientation);
 
         this.scale.on('orientationchange', this.checkOriention, this);
         this.scale.on('resize', this.resize, this);
+
+        // this.timeEvent = this.time.addEvent({ delay: 50, callback: this.onEvent, callbackScope: this, loop: true });
+
+        this.layer.add(bg);
+        this.layer.add(this.text);
+        
+    }
+
+    onEvent(){
+        if (this.startDeg == this.endDeg)
+        {
+            return;
+        }
+
+        if (this.flag == 0){
+            this.startDeg++;
+        }
+        else{
+            this.startDeg--;
+        }
+        
+        let rotation = Phaser.Math.DegToRad(this.startDeg);
+
+        // const camera = this.cameras.main;
+
+        // camera.rotation = rotation;
+
+        this.layer.rotation = rotation;
     }
 
     update (time, delta){
 
+        var pointer = this.input.activePointer;
+
+        this.text.setText([
+            'x: ' + pointer.worldX,
+            'y: ' + pointer.worldY,
+        ]);
     }
 
     checkOriention (orientation)
     {
-        const camera = this.cameras.main;
+        const { width, height } = this.scale.gameSize;
+
+        // const camera = this.cameras.main;
 
         if (orientation === Phaser.Scale.PORTRAIT)
         {
             let rotation = Phaser.Math.DegToRad(90);
-            camera.rotation = rotation;
-            camera.setScale(0.2);
+            this.layer.setPosition(width, 0);
+            this.layer.rotation = rotation;
+
+            this.flag = 0;
+            this.endDeg = 90;
+
+            // camera.setViewport(-125, 125, width, height);
+            // let rotation = Phaser.Math.DegToRad(90);
+            // camera.rotation = rotation;
+
+            //camera.x = camera.y = 0;
+            // camera.setPosition(0, 100);
+
+            // this.layer.setPosition(-125, 125);
+
         }
         else if (orientation === Phaser.Scale.LANDSCAPE)
         {
+            this.layer.setPosition(0, 0);
+            this.layer.rotation = 0;
+
+            this.flag = 1;
+            this.endDeg = 0;
+            // camera.setViewport(0, 0, width, height);
             // this.rotation = 0;
-            camera.rotation = 0;
+            // camera.rotation = 0;
+            // camera.setPosition(0, 0);
+            // this.scale.setGameSize(width, height);
         }
     }
 
     resize(size){
-        console.log(size);   
+       // console.log(size);   
 
         // const camera = this.cameras.main;
 
-        // this.layer.setPosition(size.width / 2, size.height / 2);
-        // // this.layer.setScale(this.gameScene.getZoom());
+        // // this.layer.setPosition(size.width / 2, size.height / 2);
+        // // // this.layer.setScale(this.gameScene.getZoom());
 
-        // camera.setViewport(0, 0, width, height);
+        // // camera.setViewport(0, 0, width, width);
+
+        
+        // camera.setViewport(-125, -125, width, height);
     }
 }
 
@@ -194,14 +272,14 @@ const config = {
     scale: {
         mode: Phaser.Scale.RESIZE,
         parent: 'phaser-main',
-        width: 667,
-        height: 375,
+        width: 800,
+        height: 600,
     },
     physics: {
         default: 'arcade',
         arcade: {
             gravity: { y: 300 },
-            debug: false
+            debug: true
         }
     },
     scene: [ BackgroundScene, StartScene, GameScene, RestartScene, PauseScene ]
