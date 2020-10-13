@@ -27,5 +27,50 @@
       
       year : 2020,
     },
-  ];
+    {
+      posters : {
+        thumbnail : 'https://p0.meituan.net/movie/e4e487f3bb5e3de1fb55b9ea37f1b35d1315093.jpg@160w_220h_1e_1c';
+      },
+      
+      title : '四年二班',
+      
+      year : 2020,
+    },
+    {
+      posters : {
+        thumbnail : 'https://p0.meituan.net/movie/35a2550fdf6ca5088087a685e9ec8c791613927.jpg@160w_220h_1e_1c';
+      },
+      
+      title : '喜宝',
+      
+      year : 2020,
+    },
+    {
+      posters : {
+        thumbnail : 'https://p1.meituan.net/movie/1a779e35ac30869df813ac47c2660ab33332053.jpg@160w_220h_1e_1c';
+      },
+      
+      title : '82号古宅',
+      
+      year : 2020,
+    },
+    {
+      posters : {
+        thumbnail : 'https://p0.meituan.net/movie/7e8f04a132c6ed965a2c7024ef038bdd4863031.jpg@160w_220h_1e_1c';
+      },
+      
+      title : '父子拳王',
+      
+      year : 2020,
+    },
+    {
+      posters : {
+        thumbnail : 'https://p0.meituan.net/movie/458c8679e048149b7fe31b42823e2e5c470774.jpg@160w_220h_1e_1c';
+      },
+      
+      title : '掬水月在手',
+      
+      year : 2020,
+    },
+  ]
 }
