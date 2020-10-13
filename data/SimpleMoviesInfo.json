@@ -1,0 +1,31 @@
+{
+  movies : [
+    {
+      posters : {
+        thumbnail : 'https://p0.meituan.net/moviemachine/f874ee5dfd33d15b168fb89dfcb74fe72467810.jpg@160w_220h_1e_1c';
+      },
+      
+      title : '云做的翅膀',
+      
+      year : 2020,
+    },
+    {
+      posters : {
+        thumbnail : 'https://p0.meituan.net/movie/0a9b9622ec06bfc1fc0e34676230883d876505.jpg@160w_220h_1e_1c';
+      },
+      
+      title : '七号房的礼物',
+      
+      year : 2020,
+    },
+    {
+      posters : {
+        thumbnail : 'https://p0.meituan.net/movie/333d075977119d6c828a0137a46b149d533198.jpg@160w_220h_1e_1c';
+      },
+      
+      title : '天道王',
+      
+      year : 2020,
+    },
+  ];
+}
