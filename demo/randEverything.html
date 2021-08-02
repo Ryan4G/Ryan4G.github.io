@@ -5,8 +5,13 @@
 <meta name=viewport content="width=device-width,initial-scale=1">
 <title>Everything Random Choosen</title>
 <style>
+    body{
+		margin-top: 5px;
+	}
+	
 	#myWords{
 		display: flex;
+		flex-wrap: wrap;
 	}
 	
 	#myWords span{
@@ -19,7 +24,7 @@
 	}
 	
 	#showWord{
-		font-size: 2em;
+		font-size: 2.5em;
 		font-weight: bolder;
 	}
 </style>
@@ -31,6 +36,7 @@
 		<button id='btnAddWord'>添加词语</button>
 		<button id='btnEmptyWord'>清空词库</button>
 	</div>
+	<p><b>我的词库：</b></p>
 	<div id='myWords'>
 	</div>
 </div>
@@ -40,6 +46,8 @@
 <div>
 	<button id='btnBeginEnd'>开始随机</button>
 	<button id='btnTimerEnd'>定时随机(5秒)</button>
+	
+	<p><b>随机结果：</b></p>
 	
 	<div id='showWord'>
 		
@@ -54,6 +62,8 @@
 		var randomStatus = false;
 		
 		var intervalTimer;
+		
+		var INTERVAL = 200;
 		
 		readCookie();
 		
@@ -93,7 +103,7 @@
 				$(this).text('停止随机');
 				$('#btnTimerEnd').attr('disabled', 'disabled');
 				
-				intervalTimer = setInterval(wordsRandom, 200);
+				intervalTimer = setInterval(wordsRandom, INTERVAL);
 			}
 		});
 		
@@ -102,7 +112,7 @@
 			$('#btnTimerEnd').attr('disabled', 'disabled');
 			$('#btnBeginEnd').attr('disabled', 'disabled');
 			
-			intervalTimer = setInterval(wordsRandom, 100);
+			intervalTimer = setInterval(wordsRandom, INTERVAL);
 			
 			setTimeout(function(e){
 				clearInterval(e);
