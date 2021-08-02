@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>Caculate Goods Price</title>
+<body>
+
+<div id='addGoods'>
+	<p>添加商品：</p>
+	<form>
+		<div>
+			<label>品牌</label><input type='input' id='good_brand' />
+		</div>
+		
+		<div>
+			<label>单价</label><input type='input' id='good_price' />
+		</div>
+		
+		<div>
+			<label>重量</label><input type='input' id='good_weight' />
+		</div>
+		
+		<div>
+			<label>单位</label><input type='input' id='good_unit' />
+		</div>
+		
+		<div>
+			<input id='btnAdd' type='button' value='添加'/>
+			<input id='btnReset' type='button' value='重置'/>
+		</div>
+	</form>
+</div>
+
+<hr/>
+
+<div id='listGoods'>
+	<p>商品列表：</p>
+	<table border='thin'>
+		<thead>
+			<th>品牌</th>
+			<th>单价</th>
+			<th>重量</th>
+			<th>单位</th>
+			<th>最小单位价格</th>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+	<button id='btnCmp'>比较价格</button>
+</div>
+
+<hr/>
+
+<div id='showGoods'>
+	<p>最便宜商品：</p>
+	
+	<div id='showResult'></div>
+</div>
+
+<script src="http://apps.bdimg.com/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+	$(document).ready(function(){
+		var index = 1;
+		
+		var goodsList = [];
+		
+		$('#btnAdd').on('click', function(){
+			var good_brand = $('#good_brand').val();
+			var good_price = $('#good_price').val();
+			var good_weight = $('#good_weight').val();
+			var good_unit = $('#good_unit').val();
+			
+			if (!good_brand || !good_price || !good_weight || !good_unit){
+				alert('请填写完整信息');
+				return;
+			}
+			
+			var data = {
+				'brand': good_brand,
+				'price': good_price,
+				'weight': good_weight,
+				'unit': good_unit,
+				'perPrice': good_price / good_weight,
+			};
+			
+			if (isNaN(data.perPrice) || good_weight <= 0 || good_price <= 0){
+				alert('录入信息错误，计算价格不正确');
+				return;
+			}
+			
+			addList(data);
+		});
+		
+		$('#btnCmp').on('click', function(){
+			
+			if (goodsList.length > 0){
+				var minGood = goodsList[0];
+				
+				if (goodsList.length > 1){
+					var orderGoods = goodsList.sort(function(x1, x2){return x1.perPrice - x2.perPrice;});
+					
+					minGood = orderGoods[0];
+				}
+				
+				var html = '品牌:' + minGood.brand + '<br/>';
+				
+				html += '单价:' + minGood.price + '<br/>';
+				
+				html += '重量:' + minGood.weight + '<br/>';
+				
+				html += '单位:' + minGood.unit + '<br/>';
+				
+				html += '最小单位价格:' + minGood.perPrice + '元/' + minGood.unit + '<br/>';
+				
+				$('#showResult').html(html);
+			}
+			else{
+				$('#showResult').html('');
+			}
+		});
+		
+		$('#btnReset').on('click', function(){
+			clear();
+		});
+		
+		function clear(){
+			$('#good_brand').val('');
+			$('#good_price').val('');
+			$('#good_weight').val('');
+			$('#good_unit').val('');
+		}
+		
+		function addList(data){
+		
+				goodsList.push(data);
+				
+				//clear();
+				
+				var html = $('<tr></tr>');
+				for(var item in data){
+					var myTd = $('<td></td>');
+					myTd.text(data[item]);
+					html.append(myTd);
+				}
+				
+				$('#listGoods tbody').append(html);
+		}
+	});
+</script>
+</body>
+</html>

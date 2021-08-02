@@ -1,7 +1,7 @@
 // 背景层
 class BackgroundScene extends Phaser.Scene
 {
-
+    bg;
     text;
 
     flag;
@@ -21,8 +21,22 @@ class BackgroundScene extends Phaser.Scene
     {
         // images
 
-        this.load.image('bg', 'assets/ui/bg.png');
-
+        // this.load.image('bg', 'assets/ui/bg.png');
+        this.load.image('bg-main', 'assets/ui/1136x640_background.png');
+        this.load.image('brick', 'assets/ui/286x83_brick.png');
+        this.load.image('brick2', 'assets/ui/233x241columu.png');
+        this.load.image('grass', 'assets/ui/198x67_grass.png');
+        this.load.image('grass2', 'assets/ui/386x141_grass2.png');
+        this.load.image('cannon', 'assets/ui/180x201_cannon.png');
+        this.load.image('basket', 'assets/ui/170x97_basket.png');
+        this.load.image('pot', 'assets/ui/378x187pot.png');
+        this.load.image('cloud', 'assets/ui/443x185_cloud.png');
+        this.load.image('cloud2', 'assets/ui/443x185_cloud2.png');
+        this.load.image('cat', 'assets/ui/151x172CAT.png');
+        this.load.image('vegetable1', 'assets/ui/151x151-1.png');
+        this.load.image('vegetable2', 'assets/ui/151x151-2.png');
+        this.load.image('vegetable3', 'assets/ui/151x151-3.png');
+        this.load.image('menu', 'assets/ui/164x215_list.png');
     }
 
     create ()
@@ -30,49 +44,73 @@ class BackgroundScene extends Phaser.Scene
         this.flag = 0;
         this.startDeg = this.endDeg = 0;
 
-        const width = this.scale.gameSize.width;
-        const height = this.scale.gameSize.height;
+        let {width, height} = this.scale.gameSize;
+        
+        const orient = this.scale.orientation;
 
         this.layer = this.add.container();
         
         // console.log(this.scale.gameSize);
-        const bg = this.add.image(0, 0, 'bg').setOrigin(0).setScale(width/800, height/600);
-        // const bg = this.add.image(0, 0, 'bg').setOrigin(0).setScale(0.2);
 
-        this.text = this.add.text(width / 2, height / 2, '', { fontFamily: 'Arial', fontSize: 16, color: '#ffffff' });
+        if (orient == Phaser.Scale.PORTRAIT){
+            height = this.scale.gameSize.width;
+            width = this.scale.gameSize.height; 
+        }
+        
+        this.bg = this.add.image(-1, -1, 'bg-main').setOrigin(0).setScale(width / 800, height / 600);
+  
+        this.text = this.add.text(width / 2, height / 2, '', { fontFamily: 'Arial', fontSize: 16, color: '#000000' });
 
-        this.checkOriention(this.scale.orientation);
+
+        this.checkOriention(orient);
 
         this.scale.on('orientationchange', this.checkOriention, this);
         this.scale.on('resize', this.resize, this);
 
         // this.timeEvent = this.time.addEvent({ delay: 50, callback: this.onEvent, callbackScope: this, loop: true });
 
-        this.layer.add(bg);
+        this.layer.add(this.bg);
         this.layer.add(this.text);
+
         
-    }
-
-    onEvent(){
-        if (this.startDeg == this.endDeg)
-        {
-            return;
-        }
-
-        if (this.flag == 0){
-            this.startDeg++;
-        }
-        else{
-            this.startDeg--;
-        }
+        const stdbrick = this.add.image(0, height - 40, 'brick').setOrigin(0).setScale(0.5);
+        const stdbrickW = stdbrick.width * 0.5;
+        let brickIndex = Math.ceil(width / stdbrickW);
         
-        let rotation = Phaser.Math.DegToRad(this.startDeg);
+        while(brickIndex > 0){
+            let brick = this.add.image(stdbrickW * brickIndex, height - 40, 'brick').setOrigin(0).setScale(0.5);
+            brickIndex--;
+            this.layer.add(brick);
+        }
 
-        // const camera = this.cameras.main;
+        this.layer.add(stdbrick);
+        
+        const grass = this.add.image(width - 100, height - 73, 'grass').setOrigin(0).setScale(0.5);
+        const grass2 = this.add.image(100, height - 80, 'grass2').setOrigin(0).setScale(0.3);
+        
+        const cannon = this.add.image(20, height - 140, 'cannon').setOrigin(0).setScale(0.5);
+        const pot = this.add.image(260, height - 114, 'pot').setOrigin(0).setScale(0.4);
 
-        // camera.rotation = rotation;
+        this.layer.add(grass);
+        this.layer.add(grass2);
+        this.layer.add(cannon);
+        this.layer.add(pot);
 
-        this.layer.rotation = rotation;
+        const vegetables = [
+            this.add.image(80, height - 200, 'vegetable1').setOrigin(0).setScale(0.5),
+            this.add.image(180, height - 300, 'vegetable2').setOrigin(0).setScale(0.5),
+            this.add.image(280, height - 280, 'vegetable3').setOrigin(0).setScale(0.5),
+        ]
+        
+        this.layer.add(vegetables);
+
+        const menu = this.add.image(20, 20, 'menu').setOrigin(0).setScale(0.5);
+        const platform = this.add.image(width - 250, height - 160, 'brick2').setOrigin(0).setScale(0.5);
+        const cat = this.add.image(width - 250, height - 260, 'cat').setOrigin(0).setScale(0.6);
+
+        this.layer.add(menu);
+        this.layer.add(platform);
+        this.layer.add(cat);
     }
 
     update (time, delta){
@@ -96,6 +134,7 @@ class BackgroundScene extends Phaser.Scene
             let rotation = Phaser.Math.DegToRad(90);
             this.layer.setPosition(width, 0);
             this.layer.rotation = rotation;
+            // this.layer.setScale(width / 600, height / 800);
 
             this.flag = 0;
             this.endDeg = 90;
@@ -114,6 +153,7 @@ class BackgroundScene extends Phaser.Scene
         {
             this.layer.setPosition(0, 0);
             this.layer.rotation = 0;
+            // this.layer.setScale(width / 800, height / 600);
 
             this.flag = 1;
             this.endDeg = 0;
