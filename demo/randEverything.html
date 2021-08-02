@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>Everything Random Choosen</title>
+<style>
+	#myWords{
+		display: flex;
+	}
+	
+	#myWords span{
+		padding-right: 5px;
+	}
+	
+	#myWords span::after{
+		content: '|';
+		padding-left: 5px;
+	}
+	
+	#showWord{
+		font-size: 2em;
+		font-weight: bolder;
+	}
+</style>
+<body>
+
+<div>
+	<div>
+		<input type='text' id='txtWord'/>
+		<button id='btnAddWord'>添加词语</button>
+		<button id='btnEmptyWord'>清空词库</button>
+	</div>
+	<div id='myWords'>
+	</div>
+</div>
+
+<hr/>
+
+<div>
+	<button id='btnBeginEnd'>开始随机</button>
+	<button id='btnTimerEnd'>定时随机(5秒)</button>
+	
+	<div id='showWord'>
+		
+	</div>
+</div>
+
+
+<script src="http://apps.bdimg.com/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+	$(document).ready(function(){
+		var words = [];
+		var randomStatus = false;
+		
+		var intervalTimer;
+		
+		readCookie();
+		
+		$('#btnAddWord').on('click', function(){
+			
+			var word = $('#txtWord').val();
+			
+			if (!word){
+				return;
+			}
+			
+			if (!words.includes(word)){
+				words.push(word);
+				
+				appendWords(word);
+				
+				writeCookie();
+			}
+		});
+		
+		
+		$('#btnBeginEnd').on('click', function(){
+			
+			if (randomStatus)
+			{	
+				clearInterval(intervalTimer);
+				
+				$(this).text('开始随机');
+				
+				$('#btnTimerEnd').attr('disabled', false);
+				
+				randomStatus = !randomStatus;
+			}
+			else{
+				randomStatus = !randomStatus;
+				
+				$(this).text('停止随机');
+				$('#btnTimerEnd').attr('disabled', 'disabled');
+				
+				intervalTimer = setInterval(wordsRandom, 200);
+			}
+		});
+		
+		$('#btnTimerEnd').on('click', function(){
+			
+			$('#btnTimerEnd').attr('disabled', 'disabled');
+			$('#btnBeginEnd').attr('disabled', 'disabled');
+			
+			intervalTimer = setInterval(wordsRandom, 100);
+			
+			setTimeout(function(e){
+				clearInterval(e);
+				
+				$('#btnTimerEnd').attr('disabled', false);
+				$('#btnBeginEnd').attr('disabled', false);			
+			}, 5000, intervalTimer);
+			
+		});
+		
+		$('#btnEmptyWord').on('click', function(){
+			removeCookie();
+		});
+		
+		function wordsRandom(){
+			
+			var len = words.length;
+			
+			if (len > 1){
+				var randNum = parseInt(Math.random() * (len - 0 + 1) + 0);
+				
+				$('#showWord').text(words[randNum]);
+			}
+		}
+		
+		function appendWords(word){
+			var myWordsDOM = $('#myWords');
+			
+			myWordsDOM.append($('<span/>').text(word));
+		}
+		
+		function readCookie(){
+			var json = window.localStorage.getItem('RandWords');
+			
+			console.log(json);
+			
+			if (json != null && json.length > 0){
+				words = JSON.parse(json);
+			}
+			
+			if (words.length > 0){
+				
+				$('#myWords').html('');
+				
+				for(var i in words){
+					appendWords(words[i]);
+				}
+			}
+		}
+		
+		function writeCookie(){
+			if (words.length > 0){
+				window.localStorage.setItem('RandWords', JSON.stringify(words));
+			}
+		}
+		
+		function removeCookie(){
+			window.localStorage.removeItem('RandWords');
+			
+			$('#myWords').html('');
+			
+			words = [];
+		}
+	});
+</script>
+</body>
+</html>
